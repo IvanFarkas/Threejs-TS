@@ -23,25 +23,22 @@ const controls = new OrbitControls(camera, renderer.domElement)
 controls.screenSpacePanning = true //so that panning up and down doesn't zoom in/out
 //controls.addEventListener('change', render)
 
-const planeGeometry: THREE.PlaneGeometry = new THREE.PlaneGeometry(3.6, 1.8)
+const planeGeometry: THREE.PlaneGeometry = new THREE.PlaneGeometry(3.6, 1.8, 360, 180)
 
-const material: THREE.MeshPhysicalMaterial = new THREE.MeshPhysicalMaterial({})
+const material: THREE.MeshPhongMaterial = new THREE.MeshPhongMaterial()
 
 //const texture = new THREE.TextureLoader().load("img/grid.png")
 const texture = new THREE.TextureLoader().load("img/worldColour.5400x2700.jpg")
 material.map = texture
-//const envTexture = new THREE.CubeTextureLoader().load(["img/px_50.png", "img/nx_50.png", "img/py_50.png", "img/ny_50.png", "img/pz_50.png", "img/nz_50.png"])
-const envTexture = new THREE.CubeTextureLoader().load(["img/px_eso0932a.jpg", "img/nx_eso0932a.jpg", "img/py_eso0932a.jpg", "img/ny_eso0932a.jpg", "img/pz_eso0932a.jpg", "img/nz_eso0932a.jpg"])
-envTexture.mapping = THREE.CubeReflectionMapping
-material.envMap = envTexture
+// const envTexture = new THREE.CubeTextureLoader().load(["img/px_eso0932a.jpg", "img/nx_eso0932a.jpg", "img/py_eso0932a.jpg", "img/ny_eso0932a.jpg", "img/pz_eso0932a.jpg", "img/nz_eso0932a.jpg"])
+// envTexture.mapping = THREE.CubeReflectionMapping
+// material.envMap = envTexture
 
-//const specularTexture = new THREE.TextureLoader().load("img/grayscale-test.png")
-// const specularTexture = new THREE.TextureLoader().load("img/earthSpecular.jpg")
-// material.roughnessMap = specularTexture
-// material.metalnessMap = specularTexture
+//const specularTexture = new THREE.TextureLoader().load("img/earthSpecular.jpg")
+// material.specularMap = specularTexture
 
-const bumpTexture = new THREE.TextureLoader().load("img/earth_normalmap_8192x4096.jpg")
-material.bumpMap = bumpTexture
+const displacementMap = new THREE.TextureLoader().load("img/gebco_bathy.5400x2700_8bit.jpg")
+material.displacementMap = displacementMap
 
 const plane: THREE.Mesh = new THREE.Mesh(planeGeometry, material)
 scene.add(plane)
@@ -64,12 +61,7 @@ var options = {
     "FrontSide": THREE.FrontSide,
     "BackSide": THREE.BackSide,
     "DoubleSide": THREE.DoubleSide,
-  },
-  combine: {
-    "MultiplyOperation": THREE.MultiplyOperation,
-    "MixOperation": THREE.MixOperation,
-    "AddOperation": THREE.AddOperation
-  },
+  }
 }
 const gui = new GUI()
 
@@ -85,24 +77,45 @@ materialFolder.add(material, 'side', options.side).onChange(() => updateMaterial
 
 var data = {
   color: material.color.getHex(),
-  emissive: material.emissive.getHex()
+  emissive: material.emissive.getHex(),
+  specular: material.specular.getHex()
 };
 
-var meshPhysicalMaterialFolder = gui.addFolder('THREE.meshPhysicalMaterialFolder');
+var meshPhongMaterialFolder = gui.addFolder('THREE.meshPhongMaterialFolder');
 
-meshPhysicalMaterialFolder.addColor(data, 'color').onChange(() => { material.color.setHex(Number(data.color.toString().replace('#', '0x'))) })
-meshPhysicalMaterialFolder.addColor(data, 'emissive').onChange(() => { material.emissive.setHex(Number(data.emissive.toString().replace('#', '0x'))) })
-meshPhysicalMaterialFolder.add(material, 'wireframe')
-meshPhysicalMaterialFolder.add(material, 'flatShading').onChange(() => updateMaterial())
-meshPhysicalMaterialFolder.add(material, 'reflectivity', 0, 1)
-meshPhysicalMaterialFolder.add(material, 'refractionRatio', 0, 1)
-meshPhysicalMaterialFolder.add(material, 'envMapIntensity', 0, 1)
-meshPhysicalMaterialFolder.add(material, 'roughness', 0, 1)
-meshPhysicalMaterialFolder.add(material, 'metalness', 0, 1)
-meshPhysicalMaterialFolder.add(material, 'clearcoat', 0, 1, 0.01)
-meshPhysicalMaterialFolder.add(material, 'clearcoatRoughness', 0, 1, 0.01)
-meshPhysicalMaterialFolder.add(material, 'bumpScale', 0, 1, 0.01)
-meshPhysicalMaterialFolder.open()
+meshPhongMaterialFolder.addColor(data, 'color').onChange(() => { material.color.setHex(Number(data.color.toString().replace('#', '0x'))) })
+meshPhongMaterialFolder.addColor(data, 'emissive').onChange(() => { material.emissive.setHex(Number(data.emissive.toString().replace('#', '0x'))) })
+meshPhongMaterialFolder.addColor(data, 'specular').onChange(() => { material.specular.setHex(Number(data.specular.toString().replace('#', '0x'))) });
+meshPhongMaterialFolder.add(material, 'shininess', 0, 1024);
+meshPhongMaterialFolder.add(material, 'wireframe')
+meshPhongMaterialFolder.add(material, 'flatShading').onChange(() => updateMaterial())
+meshPhongMaterialFolder.add(material, 'reflectivity', 0, 1)
+meshPhongMaterialFolder.add(material, 'refractionRatio', 0, 1)
+meshPhongMaterialFolder.add(material, 'displacementScale', -1, 1, 0.01)
+meshPhongMaterialFolder.add(material, 'displacementBias', -1, 1, 0.01)
+meshPhongMaterialFolder.open()
+
+var planeData = {
+  width: 3.6,
+  height: 1.8,
+  widthSegments: 360,
+  heightSegments: 180
+};
+const planePropertiesFolder = gui.addFolder("PlaneGeometry")
+//planePropertiesFolder.add(planeData, 'width', 1, 30).onChange(regeneratePlaneGeometry)
+//planePropertiesFolder.add(planeData, 'height', 1, 30).onChange(regeneratePlaneGeometry)
+planePropertiesFolder.add(planeData, 'widthSegments', 1, 360).onChange(regeneratePlaneGeometry)
+planePropertiesFolder.add(planeData, 'heightSegments', 1, 180).onChange(regeneratePlaneGeometry)
+planePropertiesFolder.open()
+
+function regeneratePlaneGeometry() {
+  let newGeometry = new THREE.PlaneGeometry(
+    planeData.width, planeData.height, planeData.widthSegments, planeData.heightSegments
+  )
+  plane.geometry.dispose()
+  plane.geometry = newGeometry
+}
+
 
 function updateMaterial() {
   material.side = Number(material.side)
