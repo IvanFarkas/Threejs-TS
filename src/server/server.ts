@@ -19,10 +19,10 @@ class App {
     // Visit https://sbcode.net/threejs/module-specifiers/ for info about module specifiers
     //
     // This server.ts is only useful if you are running this on a production server or you
-    // want to see how the production version of bundle.js works
+    // want to see how the production version of client.js works
     // 
     // to use this server.ts
-    // # npm run build        (this creates the production version of bundle.js and places it in ./dist/client/)
+    // # npm run build        (this creates the production version of client.js and places it in ./dist/client/)
     // # tsc -p ./src/server  (this compiles ./src/server/server.ts into ./dist/server/server.js)
     // # npm start            (this starts nodejs with express and serves the ./dist/client folder)
     // 

@@ -16,7 +16,7 @@ module.exports = {
     extensions: ['.tsx', '.ts', '.js'],
   },
   output: {
-    filename: 'bundle.js',
+    filename: 'client.js',
     path: path.resolve(__dirname, '../../dist/client'),
   },
   performance: {
