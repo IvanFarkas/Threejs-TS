@@ -13,10 +13,6 @@ const light = new THREE.PointLight(0xffffff, 2);
 light.position.set(10, 10, 10);
 scene.add(light);
 
-const light2 = new THREE.PointLight(0xffffff, 2);
-light2.position.set(-10, -10, -10);
-scene.add(light2);
-
 const camera: THREE.PerspectiveCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
 
 const renderer: THREE.WebGLRenderer = new THREE.WebGLRenderer()
@@ -32,7 +28,7 @@ const icosahedronGeometry: THREE.IcosahedronGeometry = new THREE.IcosahedronGeom
 const planeGeometry: THREE.PlaneGeometry = new THREE.PlaneGeometry()
 const torusKnotGeometry: THREE.TorusKnotGeometry = new THREE.TorusKnotGeometry()
 
-const material: THREE.MeshPhongMaterial = new THREE.MeshPhongMaterial()
+const material: THREE.MeshStandardMaterial = new THREE.MeshStandardMaterial()
 
 const texture = new THREE.TextureLoader().load("img/grid.png")
 material.map = texture
@@ -79,12 +75,7 @@ var options = {
     "FrontSide": THREE.FrontSide,
     "BackSide": THREE.BackSide,
     "DoubleSide": THREE.DoubleSide,
-  },
-  combine: {
-    "MultiplyOperation": THREE.MultiplyOperation,
-    "MixOperation": THREE.MixOperation,
-    "AddOperation": THREE.AddOperation
-  },
+  }
 }
 const gui = new GUI()
 
@@ -100,27 +91,21 @@ materialFolder.open()
 
 var data = {
   color: material.color.getHex(),
-  emissive: material.emissive.getHex(),
-  specular: material.specular.getHex()
+  emissive: material.emissive.getHex()
 };
 
-var meshPhongMaterialFolder = gui.addFolder('THREE.MeshPhongMaterial');
+var meshStandardMaterialFolder = gui.addFolder('THREE.MeshStandardMaterial');
 
-meshPhongMaterialFolder.addColor(data, 'color').onChange(() => { material.color.setHex(Number(data.color.toString().replace('#', '0x'))) });
-meshPhongMaterialFolder.addColor(data, 'emissive').onChange(() => { material.emissive.setHex(Number(data.emissive.toString().replace('#', '0x'))) });
-meshPhongMaterialFolder.addColor(data, 'specular').onChange(() => { material.specular.setHex(Number(data.specular.toString().replace('#', '0x'))) });
-meshPhongMaterialFolder.add(material, 'shininess', 0, 1024);
-meshPhongMaterialFolder.add(material, 'wireframe');
-meshPhongMaterialFolder.add(material, 'wireframeLinewidth', 0, 10);
-meshPhongMaterialFolder.add(material, 'flatShading').onChange(() => updateMaterial())
-meshPhongMaterialFolder.add(material, 'combine', options.combine).onChange(() => updateMaterial())
-meshPhongMaterialFolder.add(material, 'reflectivity', 0, 1);
-meshPhongMaterialFolder.add(material, 'refractionRatio', 0, 1);
-meshPhongMaterialFolder.open()
+meshStandardMaterialFolder.addColor(data, 'color').onChange(() => { material.color.setHex(Number(data.color.toString().replace('#', '0x'))) });
+meshStandardMaterialFolder.addColor(data, 'emissive').onChange(() => { material.emissive.setHex(Number(data.emissive.toString().replace('#', '0x'))) });
+meshStandardMaterialFolder.add(material, 'wireframe');
+meshStandardMaterialFolder.add(material, 'flatShading').onChange(() => updateMaterial())
+meshStandardMaterialFolder.add(material, 'roughness', 0, 1);
+meshStandardMaterialFolder.add(material, 'metalness', 0, 1);
+meshStandardMaterialFolder.open()
 
 function updateMaterial() {
   material.side = Number(material.side)
-  material.combine = Number(material.combine)
   material.needsUpdate = true
 }
 
