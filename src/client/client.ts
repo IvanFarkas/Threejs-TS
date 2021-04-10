@@ -20,8 +20,8 @@ document.body.appendChild(renderer.domElement)
 const controls = new OrbitControls(camera, renderer.domElement)
 controls.screenSpacePanning = true //so that panning up and down doesn't zoom in/out
 
-const planeGeometry1: THREE.PlaneGeometry = new THREE.PlaneGeometry()
-const planeGeometry2: THREE.PlaneGeometry = new THREE.PlaneGeometry()
+const planeGeometry1: THREE.PlaneGeometry = new THREE.PlaneGeometry(2, 25)
+const planeGeometry2: THREE.PlaneGeometry = new THREE.PlaneGeometry(2, 25)
 
 //const texture1 = new THREE.TextureLoader().load("img/grid.png")
 //const texture2 = new THREE.TextureLoader().load("img/grid.png")
@@ -48,7 +48,7 @@ texture1.mipmaps[4] = mipmap(8, '#008800');
 texture1.mipmaps[5] = mipmap(4, '#000088');
 texture1.mipmaps[6] = mipmap(2, '#008888');
 texture1.mipmaps[7] = mipmap(1, '#880088');
-texture1.repeat.set(5, 5);
+texture1.repeat.set(5, 50);
 texture1.wrapS = THREE.RepeatWrapping;
 texture1.wrapT = THREE.RepeatWrapping;
 
@@ -61,7 +61,7 @@ texture2.mipmaps[4] = mipmap(8, '#008800');
 texture2.mipmaps[5] = mipmap(4, '#000088');
 texture2.mipmaps[6] = mipmap(2, '#008888');
 texture2.mipmaps[7] = mipmap(1, '#880088');
-texture2.repeat.set(5, 5);
+texture2.repeat.set(5, 50);
 texture2.wrapS = THREE.RepeatWrapping;
 texture2.wrapT = THREE.RepeatWrapping;
 
@@ -101,10 +101,12 @@ var options = {
     "LinearFilter (Default)": THREE.LinearFilter,
   }
 }
+
 const gui = new GUI()
 const textureFolder = gui.addFolder('THREE.Texture')
 textureFolder.add(texture2, 'minFilter', options.minFilters).onChange(() => updateMinFilter())
 textureFolder.add(texture2, 'magFilter', options.magFilters).onChange(() => updateMagFilter())
+textureFolder.add(texture2, 'anisotropy', 1, renderer.capabilities.getMaxAnisotropy()).onChange(() => texture2.needsUpdate = true)
 textureFolder.open()
 
 function updateMinFilter() {
