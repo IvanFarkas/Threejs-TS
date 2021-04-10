@@ -91,7 +91,7 @@ meshPhongMaterialFolder.add(material, 'wireframe')
 meshPhongMaterialFolder.add(material, 'flatShading').onChange(() => updateMaterial())
 meshPhongMaterialFolder.add(material, 'reflectivity', 0, 1)
 meshPhongMaterialFolder.add(material, 'refractionRatio', 0, 1)
-meshPhongMaterialFolder.add(material, 'displacementScale', -1, 1, 0.01)
+meshPhongMaterialFolder.add(material, 'displacementScale', 0, 1, 0.01)
 meshPhongMaterialFolder.add(material, 'displacementBias', -1, 1, 0.01)
 meshPhongMaterialFolder.open()
 
@@ -116,6 +116,13 @@ function regeneratePlaneGeometry() {
   plane.geometry = newGeometry
 }
 
+const textureFolder = gui.addFolder("Texture")
+textureFolder.add(texture.repeat, 'x', 0.1, 1, 0.1)
+textureFolder.add(texture.repeat, 'y', 0.1, 1, 0.1)
+textureFolder.add(texture.center, 'x', 0, 1, 0.001)
+textureFolder.add(texture.center, 'y', 0, 1, 0.001)
+
+// textureFolder.open()
 
 function updateMaterial() {
   material.side = Number(material.side)
