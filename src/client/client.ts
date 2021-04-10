@@ -25,7 +25,7 @@ controls.screenSpacePanning = true //so that panning up and down doesn't zoom in
 
 const planeGeometry: THREE.PlaneGeometry = new THREE.PlaneGeometry(3.6, 1.8)
 
-const material: THREE.MeshPhongMaterial = new THREE.MeshPhongMaterial()
+const material: THREE.MeshPhysicalMaterial = new THREE.MeshPhysicalMaterial({})
 
 //const texture = new THREE.TextureLoader().load("img/grid.png")
 const texture = new THREE.TextureLoader().load("img/worldColour.5400x2700.jpg")
@@ -37,7 +37,8 @@ material.envMap = envTexture
 
 //const specularTexture = new THREE.TextureLoader().load("img/grayscale-test.png")
 const specularTexture = new THREE.TextureLoader().load("img/earthSpecular.jpg")
-material.specularMap = specularTexture
+material.roughnessMap = specularTexture
+material.metalnessMap = specularTexture
 
 const plane: THREE.Mesh = new THREE.Mesh(planeGeometry, material)
 scene.add(plane)
@@ -81,25 +82,26 @@ materialFolder.add(material, 'side', options.side).onChange(() => updateMaterial
 
 var data = {
   color: material.color.getHex(),
-  emissive: material.emissive.getHex(),
-  specular: material.specular.getHex()
+  emissive: material.emissive.getHex()
 };
 
-var meshPhongMaterialFolder = gui.addFolder('THREE.MeshPhongMaterial');
+var meshPhysicalMaterialFolder = gui.addFolder('THREE.meshPhysicalMaterialFolder');
 
-meshPhongMaterialFolder.addColor(data, 'color').onChange(() => { material.color.setHex(Number(data.color.toString().replace('#', '0x'))) })
-meshPhongMaterialFolder.addColor(data, 'emissive').onChange(() => { material.emissive.setHex(Number(data.emissive.toString().replace('#', '0x'))) })
-meshPhongMaterialFolder.addColor(data, 'specular').onChange(() => { material.specular.setHex(Number(data.specular.toString().replace('#', '0x'))) })
-meshPhongMaterialFolder.add(material, 'shininess', 0, 1024)
-meshPhongMaterialFolder.add(material, 'wireframe')
-meshPhongMaterialFolder.add(material, 'flatShading').onChange(() => updateMaterial())
-meshPhongMaterialFolder.add(material, 'combine', options.combine).onChange(() => updateMaterial())
-meshPhongMaterialFolder.add(material, 'reflectivity', 0, 1)
-meshPhongMaterialFolder.open()
+meshPhysicalMaterialFolder.addColor(data, 'color').onChange(() => { material.color.setHex(Number(data.color.toString().replace('#', '0x'))) })
+meshPhysicalMaterialFolder.addColor(data, 'emissive').onChange(() => { material.emissive.setHex(Number(data.emissive.toString().replace('#', '0x'))) })
+meshPhysicalMaterialFolder.add(material, 'wireframe')
+meshPhysicalMaterialFolder.add(material, 'flatShading').onChange(() => updateMaterial())
+meshPhysicalMaterialFolder.add(material, 'reflectivity', 0, 1)
+meshPhysicalMaterialFolder.add(material, 'refractionRatio', 0, 1)
+meshPhysicalMaterialFolder.add(material, 'envMapIntensity', 0, 1)
+meshPhysicalMaterialFolder.add(material, 'roughness', 0, 1)
+meshPhysicalMaterialFolder.add(material, 'metalness', 0, 1)
+meshPhysicalMaterialFolder.add(material, 'clearcoat', 0, 1, 0.01)
+meshPhysicalMaterialFolder.add(material, 'clearcoatRoughness', 0, 1, 0.01)
+meshPhysicalMaterialFolder.open()
 
 function updateMaterial() {
   material.side = Number(material.side)
-  material.combine = Number(material.combine)
   material.needsUpdate = true
 }
 
