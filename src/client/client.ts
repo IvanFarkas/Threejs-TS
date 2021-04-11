@@ -7,7 +7,7 @@ const scene: THREE.Scene = new THREE.Scene()
 const axesHelper = new THREE.AxesHelper(5)
 scene.add(axesHelper)
 
-const light = new THREE.SpotLight();
+const light = new THREE.DirectionalLight();
 light.castShadow = true;
 light.shadow.mapSize.width = 512;
 light.shadow.mapSize.height = 512;
@@ -15,7 +15,7 @@ light.shadow.camera.near = 0.5;
 light.shadow.camera.far = 100
 scene.add(light);
 
-//const helper = new THREE.SpotLightHelper(light);
+//var helper = new THREE.DirectionalLightHelper(light);
 const helper = new THREE.CameraHelper(light.shadow.camera);
 scene.add(helper);
 
@@ -25,9 +25,6 @@ const renderer: THREE.WebGLRenderer = new THREE.WebGLRenderer()
 renderer.setSize(window.innerWidth, window.innerHeight)
 renderer.shadowMap.enabled = true
 renderer.shadowMap.type = THREE.PCFSoftShadowMap
-//renderer.shadowMap.type = THREE.BasicShadowMap
-//renderer.shadowMap.type = THREE.PCFShadowMap
-//renderer.shadowMap.type = THREE.VSMShadowMap
 
 document.body.appendChild(renderer.domElement)
 
@@ -110,9 +107,9 @@ document.body.appendChild(stats.dom)
 
 var data = {
   color: light.color.getHex(),
-  mapsEnabled: true,
   shadowMapSizeWidth: 512,
   shadowMapSizeHeight: 512,
+  mapsEnabled: true
 };
 const gui = new GUI()
 const lightFolder = gui.addFolder('THREE.Light')
@@ -120,24 +117,25 @@ lightFolder.addColor(data, 'color').onChange(() => { light.color.setHex(Number(d
 lightFolder.add(light, 'intensity', 0, 1, 0.01);
 lightFolder.open()
 
-const spotLightFolder = gui.addFolder('THREE.SpotLight')
-spotLightFolder.add(light, "distance", 0, 100, 0.01)
-spotLightFolder.add(light, "decay", 0, 4, 0.1)
-spotLightFolder.add(light, "angle", 0, 1, 0.1)
-spotLightFolder.add(light, "penumbra", 0, 1, 0.1)
-spotLightFolder.add(light.shadow.camera, "near", 0.1, 100).onChange(() => light.shadow.camera.updateProjectionMatrix())
-spotLightFolder.add(light.shadow.camera, "far", 0.1, 100).onChange(() => light.shadow.camera.updateProjectionMatrix())
-spotLightFolder.add(data, "shadowMapSizeWidth", [256, 512, 1024, 2048, 4096]).onChange(() => updateShadowMapSize())
-spotLightFolder.add(data, "shadowMapSizeHeight", [256, 512, 1024, 2048, 4096]).onChange(() => updateShadowMapSize())
-spotLightFolder.add(light.position, "x", -50, 50, 0.01)
-spotLightFolder.add(light.position, "y", -50, 50, 0.01)
-spotLightFolder.add(light.position, "z", -50, 50, 0.01)
-spotLightFolder.open()
+const directionalLightFolder = gui.addFolder('THREE.DirectionalLight')
+directionalLightFolder.add(light.shadow.camera, "left", -10, -1, 0.1).onChange(() => light.shadow.camera.updateProjectionMatrix())
+directionalLightFolder.add(light.shadow.camera, "right", 1, 10, 0.1).onChange(() => light.shadow.camera.updateProjectionMatrix())
+directionalLightFolder.add(light.shadow.camera, "top", 1, 10, 0.1).onChange(() => light.shadow.camera.updateProjectionMatrix())
+directionalLightFolder.add(light.shadow.camera, "bottom", -10, -1, 0.1).onChange(() => light.shadow.camera.updateProjectionMatrix())
+directionalLightFolder.add(light.shadow.camera, "near", 0.1, 100).onChange(() => light.shadow.camera.updateProjectionMatrix())
+directionalLightFolder.add(light.shadow.camera, "far", 0.1, 100).onChange(() => light.shadow.camera.updateProjectionMatrix())
+directionalLightFolder.add(data, "shadowMapSizeWidth", [256, 512, 1024, 2048, 4096]).onChange(() => updateShadowMapSize())
+directionalLightFolder.add(data, "shadowMapSizeHeight", [256, 512, 1024, 2048, 4096]).onChange(() => updateShadowMapSize())
+directionalLightFolder.add(light.position, "x", -50, 50, 0.01)
+directionalLightFolder.add(light.position, "y", -50, 50, 0.01)
+directionalLightFolder.add(light.position, "z", -50, 50, 0.01)
+
+directionalLightFolder.open()
 
 function updateShadowMapSize() {
   light.shadow.mapSize.width = data.shadowMapSizeWidth
   light.shadow.mapSize.height = data.shadowMapSizeHeight;
-  (light.shadow.map as any) = null
+  (light.shadow.map as any) = null;
 }
 
 const meshesFolder = gui.addFolder('Meshes')
