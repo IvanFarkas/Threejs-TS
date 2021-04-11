@@ -1,18 +1,19 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
-import { PLYLoader } from 'three/examples/jsm/loaders/PLYLoader'
+import { STLLoader } from 'three/examples/jsm/loaders/STLLoader'
 import Stats from 'three/examples/jsm/libs/stats.module'
 
 const scene: THREE.Scene = new THREE.Scene()
+
 const axesHelper = new THREE.AxesHelper(5)
 scene.add(axesHelper)
 
-var light = new THREE.SpotLight();
-light.position.set(20, 20, 20)
+var light = new THREE.DirectionalLight();
+light.position.set(2.5, 7.5, 15)
 scene.add(light);
 
 const camera: THREE.PerspectiveCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
-camera.position.z = 40
+camera.position.z = 3
 
 const renderer: THREE.WebGLRenderer = new THREE.WebGLRenderer()
 renderer.outputEncoding = THREE.sRGBEncoding
@@ -20,9 +21,11 @@ renderer.setSize(window.innerWidth, window.innerHeight)
 document.body.appendChild(renderer.domElement)
 
 const controls = new OrbitControls(camera, renderer.domElement)
+controls.enableDamping = true
 
-const envTexture = new THREE.CubeTextureLoader().load(["img/px_25.jpg", "img/nx_25.jpg", "img/py_25.jpg", "img/ny_25.jpg", "img/pz_25.jpg", "img/nz_25.jpg"]);
-envTexture.mapping = THREE.CubeReflectionMapping;
+const envTexture = new THREE.CubeTextureLoader().load(["img/px_25.jpg", "img/nx_25.jpg", "img/py_25.jpg", "img/ny_25.jpg", "img/pz_25.jpg", "img/nz_25.jpg"])
+envTexture.mapping = THREE.CubeReflectionMapping
+
 const material = new THREE.MeshPhysicalMaterial({
   color: 0xb2ffc8,
   envMap: envTexture,
@@ -35,14 +38,11 @@ const material = new THREE.MeshPhysicalMaterial({
   clearcoatRoughness: .25
 });
 
-let mesh: THREE.Mesh
-const loader = new PLYLoader()
+const loader = new STLLoader()
 loader.load(
-  'models/sean4.ply',
+  'models/example.stl',
   function (geometry) {
-    geometry.computeVertexNormals();
-    mesh = new THREE.Mesh(geometry, material)
-    mesh.rotateX(-Math.PI / 2)
+    const mesh = new THREE.Mesh(geometry, material)
     scene.add(mesh)
   },
   (xhr) => {
@@ -66,6 +66,8 @@ document.body.appendChild(stats.dom)
 
 var animate = function () {
   requestAnimationFrame(animate)
+
+  controls.update()
 
   render()
 
