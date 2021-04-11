@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls'
 import Stats from 'three/examples/jsm/libs/stats.module'
 
 const scene: THREE.Scene = new THREE.Scene()
@@ -15,38 +15,21 @@ const renderer: THREE.WebGLRenderer = new THREE.WebGLRenderer()
 renderer.setSize(window.innerWidth, window.innerHeight)
 document.body.appendChild(renderer.domElement)
 
-const controls = new OrbitControls(camera, renderer.domElement)
-// controls.addEventListener('change', () => console.log("Controls Change")) //this line is unnecessary if you are already re-rendering within the animation loop 
+const controls = new TrackballControls(camera, renderer.domElement)
+// controls.addEventListener('change', () => console.log("Controls Change"))
 // controls.addEventListener('start', () => console.log("Controls Start Event"))
 // controls.addEventListener('end', () => console.log("Controls End Event"))
-
-// controls.autoRotate = true
-// controls.autoRotateSpeed = 10
-// controls.enableDamping = true
-// controls.dampingFactor = .01
-controls.enableKeys = true
-controls.keys = {
-  LEFT: 37, // left arrow
-  UP: 38, // up arrow
-  RIGHT: 39, // right arrow
-  BOTTOM: 40 // down arrow
-}
-controls.mouseButtons = {
-  LEFT: THREE.MOUSE.ROTATE,
-  MIDDLE: THREE.MOUSE.DOLLY,
-  RIGHT: THREE.MOUSE.PAN
-}
-controls.touches = {
-  ONE: THREE.TOUCH.ROTATE,
-  TWO: THREE.TOUCH.DOLLY_PAN
-}
-controls.screenSpacePanning = true
-controls.minAzimuthAngle = 0
-controls.maxAzimuthAngle = Math.PI / 2
-controls.minPolarAngle = Math.PI / 2
-controls.maxPolarAngle = Math.PI - (Math.PI / 2)
-controls.maxDistance = 4;
-controls.minDistance = 2;
+// controls.enabled = false
+// controls.rotateSpeed = 1.0;
+// controls.zoomSpeed = 1.2;
+// controls.panSpeed = 0.8;
+// controls.keys = [65, 83, 68]
+// controls.noPan = true //default false
+// controls.noRotate = true //default false
+// controls.noZoom = true //default false
+// controls.staticMoving = true //default false
+// controls.maxDistance = 4;
+// controls.minDistance = 2;
 
 const geometry: THREE.BoxGeometry = new THREE.BoxGeometry()
 const material: THREE.MeshBasicMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00, wireframe: true })
