@@ -7,27 +7,38 @@ const scene: THREE.Scene = new THREE.Scene()
 const axesHelper = new THREE.AxesHelper(5)
 scene.add(axesHelper)
 
-var light = new THREE.SpotLight();
+const light = new THREE.SpotLight();
+light.castShadow = true;
+light.shadow.mapSize.width = 512;
+light.shadow.mapSize.height = 512;
+light.shadow.camera.near = 0.5;
+light.shadow.camera.far = 100
 scene.add(light);
 
-var helper = new THREE.SpotLightHelper(light);
+//const helper = new THREE.SpotLightHelper(light);
+const helper = new THREE.CameraHelper(light.shadow.camera);
 scene.add(helper);
-
 
 const camera: THREE.PerspectiveCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
 
 const renderer: THREE.WebGLRenderer = new THREE.WebGLRenderer()
 renderer.setSize(window.innerWidth, window.innerHeight)
+renderer.shadowMap.enabled = true
+renderer.shadowMap.type = THREE.PCFSoftShadowMap
+//renderer.shadowMap.type = THREE.BasicShadowMap
+//renderer.shadowMap.type = THREE.PCFShadowMap
+//renderer.shadowMap.type = THREE.VSMShadowMap
 
 document.body.appendChild(renderer.domElement)
 
 const controls = new OrbitControls(camera, renderer.domElement)
 
-// const planeGeometry: THREE.PlaneGeometry = new THREE.PlaneGeometry(100, 20)
-// const plane: THREE.Mesh = new THREE.Mesh(planeGeometry, new THREE.MeshPhongMaterial())
-// plane.rotateX(-Math.PI / 2)
-// //plane.position.y = -1.75
-// scene.add(plane)
+const planeGeometry: THREE.PlaneGeometry = new THREE.PlaneGeometry(100, 20)
+const plane: THREE.Mesh = new THREE.Mesh(planeGeometry, new THREE.MeshPhongMaterial())
+plane.rotateX(-Math.PI / 2)
+plane.position.y = -1.75
+plane.receiveShadow = true;
+scene.add(plane)
 
 const torusGeometry: THREE.TorusGeometry[] = [
   new THREE.TorusGeometry(),
@@ -66,6 +77,18 @@ torus[2].position.x = 0
 torus[3].position.x = 4
 torus[4].position.x = 8
 
+torus[0].castShadow = true;
+torus[1].castShadow = true;
+torus[2].castShadow = true;
+torus[3].castShadow = true;
+torus[4].castShadow = true;
+
+torus[0].receiveShadow = true;
+torus[1].receiveShadow = true;
+torus[2].receiveShadow = true;
+torus[3].receiveShadow = true;
+torus[4].receiveShadow = true;
+
 scene.add(torus[0])
 scene.add(torus[1])
 scene.add(torus[2])
@@ -87,7 +110,9 @@ document.body.appendChild(stats.dom)
 
 var data = {
   color: light.color.getHex(),
-  mapsEnabled: true
+  mapsEnabled: true,
+  shadowMapSizeWidth: 512,
+  shadowMapSizeHeight: 512,
 };
 const gui = new GUI()
 const lightFolder = gui.addFolder('THREE.Light')
@@ -100,10 +125,20 @@ spotLightFolder.add(light, "distance", 0, 100, 0.01)
 spotLightFolder.add(light, "decay", 0, 4, 0.1)
 spotLightFolder.add(light, "angle", 0, 1, 0.1)
 spotLightFolder.add(light, "penumbra", 0, 1, 0.1)
+spotLightFolder.add(light.shadow.camera, "near", 0.1, 100).onChange(() => light.shadow.camera.updateProjectionMatrix())
+spotLightFolder.add(light.shadow.camera, "far", 0.1, 100).onChange(() => light.shadow.camera.updateProjectionMatrix())
+spotLightFolder.add(data, "shadowMapSizeWidth", [256, 512, 1024, 2048, 4096]).onChange(() => updateShadowMapSize())
+spotLightFolder.add(data, "shadowMapSizeHeight", [256, 512, 1024, 2048, 4096]).onChange(() => updateShadowMapSize())
 spotLightFolder.add(light.position, "x", -50, 50, 0.01)
 spotLightFolder.add(light.position, "y", -50, 50, 0.01)
 spotLightFolder.add(light.position, "z", -50, 50, 0.01)
 spotLightFolder.open()
+
+function updateShadowMapSize() {
+  light.shadow.mapSize.width = data.shadowMapSizeWidth
+  light.shadow.mapSize.height = data.shadowMapSizeHeight;
+  (light.shadow.map as any) = null
+}
 
 const meshesFolder = gui.addFolder('Meshes')
 meshesFolder.add(data, 'mapsEnabled').onChange(() => {
