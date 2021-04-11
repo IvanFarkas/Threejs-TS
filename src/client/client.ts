@@ -1,81 +1,54 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
-import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader'
-import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import Stats from 'three/examples/jsm/libs/stats.module'
 
 const scene: THREE.Scene = new THREE.Scene()
 const axesHelper = new THREE.AxesHelper(5)
 scene.add(axesHelper)
 
-var light = new THREE.PointLight();
-light.position.set(2.5, 7.5, 15)
+var light = new THREE.SpotLight();
+light.position.set(5, 5, 5)
 scene.add(light);
 
 const camera: THREE.PerspectiveCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
-camera.position.z = 3
+camera.position.z = 2
 
 const renderer: THREE.WebGLRenderer = new THREE.WebGLRenderer()
+renderer.physicallyCorrectLights = true
+renderer.shadowMap.enabled = true
+renderer.outputEncoding = THREE.sRGBEncoding
 renderer.setSize(window.innerWidth, window.innerHeight)
 document.body.appendChild(renderer.domElement)
 
 const controls = new OrbitControls(camera, renderer.domElement)
 
-const mtlLoader = new MTLLoader();
-mtlLoader.load('models/monkey.mtl',
-  (materials) => {
-    materials.preload();
-
-    const objLoader: OBJLoader = new OBJLoader();
-    objLoader.setMaterials(materials);
-    objLoader.load(
-      'models/monkey.obj',
-      (object) => {
-        scene.add(object);
-      },
-      (xhr) => {
-        console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-      },
-      (error) => {
-        console.log('An error happened');
+const loader = new GLTFLoader()
+loader.load(
+  'models/monkey.glb', (gltf) => {
+    gltf.scene.traverse(function (child) {
+      if ((<THREE.Mesh>child).isMesh) {
+        let m = <THREE.Mesh>child
+        m.receiveShadow = true
+        m.castShadow = true
       }
-    );
+      if ((<THREE.Light>child).isLight) {
+        let l = <THREE.Light>child
+        l.castShadow = true
+        l.shadow.bias = -.003
+        l.shadow.mapSize.width = 2048
+        l.shadow.mapSize.height = 2048
+      }
+    })
+    scene.add(gltf.scene);
   },
   (xhr) => {
-    console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+    console.log((xhr.loaded / xhr.total * 100) + '% loaded')
   },
   (error) => {
-    console.log('An error happened');
+    console.log(error);
   }
-)
-
-mtlLoader.load('models/monkeyTextured.mtl',
-  (materials) => {
-    materials.preload();
-
-    const objLoader: OBJLoader = new OBJLoader();
-    objLoader.setMaterials(materials);
-    objLoader.load(
-      'models/monkeyTextured.obj',
-      (object) => {
-        object.position.x = 3
-        scene.add(object);
-      },
-      (xhr) => {
-        console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-      },
-      (error) => {
-        console.log('An error happened');
-      }
-    );
-  },
-  (xhr) => {
-    console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-  },
-  (error) => {
-    console.log('An error happened');
-  }
-)
+);
 
 window.addEventListener('resize', onWindowResize, false)
 function onWindowResize() {
