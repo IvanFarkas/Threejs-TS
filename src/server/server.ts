@@ -12,6 +12,7 @@ class App {
     this.port = port
     const app = express()
     app.use(express.static(path.join(__dirname, '../client')))
+    //app.use('/js/libs/draco/', express.static(path.join(__dirname, '../../node_modules/three/examples/js/libs/draco/')))
     // In the webpack version of the boilerplate, it is not necessary 
     // to add static references to the libs in node_modules if 
     // you are using module specifiers in your client.ts imports. 

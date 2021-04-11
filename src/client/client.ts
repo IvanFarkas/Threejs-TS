@@ -1,15 +1,12 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader'
 import Stats from 'three/examples/jsm/libs/stats.module'
 
 const scene: THREE.Scene = new THREE.Scene()
 const axesHelper = new THREE.AxesHelper(5)
 scene.add(axesHelper)
-
-var light = new THREE.SpotLight();
-light.position.set(5, 5, 5)
-scene.add(light);
 
 const camera: THREE.PerspectiveCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
 camera.position.z = 2
@@ -17,15 +14,24 @@ camera.position.z = 2
 const renderer: THREE.WebGLRenderer = new THREE.WebGLRenderer()
 renderer.physicallyCorrectLights = true
 renderer.shadowMap.enabled = true
-renderer.outputEncoding = THREE.sRGBEncoding
 renderer.setSize(window.innerWidth, window.innerHeight)
 document.body.appendChild(renderer.domElement)
 
 const controls = new OrbitControls(camera, renderer.domElement)
 
+var dracoLoader = new DRACOLoader();
+
+// TODO: Fix HACK
+dracoLoader.setDecoderPath('https://unpkg.com/three@0.127.0/examples/js/libs/draco/');
+// dracoLoader.setDecoderPath('/js/libs/draco/');
+
+dracoLoader.setDecoderConfig({ type: 'js' });
+
 const loader = new GLTFLoader()
+loader.setDRACOLoader(dracoLoader)
 loader.load(
-  'models/monkey.glb', (gltf) => {
+  'models/monkey_compressed.glb',
+  function (gltf) {
     gltf.scene.traverse(function (child) {
       if ((<THREE.Mesh>child).isMesh) {
         let m = <THREE.Mesh>child
@@ -40,7 +46,8 @@ loader.load(
         l.shadow.mapSize.height = 2048
       }
     })
-    scene.add(gltf.scene);
+    scene.add(gltf.scene)
+
   },
   (xhr) => {
     console.log((xhr.loaded / xhr.total * 100) + '% loaded')
@@ -49,6 +56,7 @@ loader.load(
     console.log(error);
   }
 );
+
 
 window.addEventListener('resize', onWindowResize, false)
 function onWindowResize() {
