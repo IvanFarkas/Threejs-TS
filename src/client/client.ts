@@ -7,10 +7,10 @@ const scene: THREE.Scene = new THREE.Scene()
 const axesHelper = new THREE.AxesHelper(5)
 scene.add(axesHelper)
 
-var light = new THREE.PointLight();
+var light = new THREE.SpotLight();
 scene.add(light);
 
-var helper = new THREE.PointLightHelper(light);
+var helper = new THREE.SpotLightHelper(light);
 scene.add(helper);
 
 
@@ -95,15 +95,15 @@ lightFolder.addColor(data, 'color').onChange(() => { light.color.setHex(Number(d
 lightFolder.add(light, 'intensity', 0, 1, 0.01);
 lightFolder.open()
 
-const pointLightFolder = gui.addFolder('THREE.PointLight')
-//hemisphereLightFolder.addColor(data, 'groundColor').onChange(() => { light.groundColor.setHex(Number(data.groundColor.toString().replace('#', '0x'))) });
-pointLightFolder.add(light, "distance", 0, 100, 0.01)
-pointLightFolder.add(light, "decay", 0, 4, 0.1)
-
-pointLightFolder.add(light.position, "x", -50, 50, 0.01)
-pointLightFolder.add(light.position, "y", -50, 50, 0.01)
-pointLightFolder.add(light.position, "z", -50, 50, 0.01)
-pointLightFolder.open()
+const spotLightFolder = gui.addFolder('THREE.SpotLight')
+spotLightFolder.add(light, "distance", 0, 100, 0.01)
+spotLightFolder.add(light, "decay", 0, 4, 0.1)
+spotLightFolder.add(light, "angle", 0, 1, 0.1)
+spotLightFolder.add(light, "penumbra", 0, 1, 0.1)
+spotLightFolder.add(light.position, "x", -50, 50, 0.01)
+spotLightFolder.add(light.position, "y", -50, 50, 0.01)
+spotLightFolder.add(light.position, "z", -50, 50, 0.01)
+spotLightFolder.open()
 
 const meshesFolder = gui.addFolder('Meshes')
 meshesFolder.add(data, 'mapsEnabled').onChange(() => {
