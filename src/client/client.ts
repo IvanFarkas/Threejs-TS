@@ -1,123 +1,113 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
-import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import Stats from 'three/examples/jsm/libs/stats.module'
+import { DragControls } from 'three/examples/jsm/controls/DragControls'
 
 const scene: THREE.Scene = new THREE.Scene()
+const axesHelper = new THREE.AxesHelper(5)
+scene.add(axesHelper)
+
+var light1 = new THREE.PointLight();
+light1.position.set(2.5, 2.5, 2.5)
+light1.castShadow = true
+scene.add(light1);
+
+var light2 = new THREE.PointLight();
+light2.position.set(-2.5, 2.5, 2.5)
+light2.castShadow = true
+scene.add(light2);
 
 const camera: THREE.PerspectiveCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 1000)
-camera.position.set(4, 4, 4)
+camera.position.set(0.8, 1.4, 1.0)
 
 const renderer: THREE.WebGLRenderer = new THREE.WebGLRenderer()
 renderer.setSize(window.innerWidth, window.innerHeight)
+renderer.shadowMap.enabled = true
 document.body.appendChild(renderer.domElement)
 
-const controls = new OrbitControls(camera, renderer.domElement)
+const orbitControls = new OrbitControls(camera, renderer.domElement)
+orbitControls.screenSpacePanning = true
+orbitControls.target.set(0, 1, 0)
+
+const sceneMeshes: THREE.Mesh[] = new Array()
+let boxHelper: THREE.BoxHelper
+
+const dragControls = new DragControls(sceneMeshes, camera, renderer.domElement)
+dragControls.addEventListener("hoveron", (event) => {
+  boxHelper.visible = true
+  orbitControls.enabled = false
+});
+dragControls.addEventListener("hoveroff", (event) => {
+  boxHelper.visible = false
+  orbitControls.enabled = true
+});
+dragControls.addEventListener("drag", (event) => {
+  event.object.position.y = 0
+});
+dragControls.addEventListener('dragstart', (event) => {
+  boxHelper.visible = true
+  orbitControls.enabled = false
+})
+dragControls.addEventListener('dragend', (event) => {
+  boxHelper.visible = false
+  orbitControls.enabled = true
+})
+
+const planeGeometry: THREE.PlaneGeometry = new THREE.PlaneGeometry(25, 25)
+const texture = new THREE.TextureLoader().load("img/grid.png")
+const plane: THREE.Mesh = new THREE.Mesh(planeGeometry, new THREE.MeshPhongMaterial({ map: texture }))
+plane.rotateX(-Math.PI / 2)
+plane.receiveShadow = true
+scene.add(plane)
 
 let mixer: THREE.AnimationMixer
 let modelReady = false;
-
 const gltfLoader: GLTFLoader = new GLTFLoader();
+let modelGroup: THREE.Group
+let modelDragBox: THREE.Mesh
 
-const dropzone = document.getElementById("dropzone") as HTMLDivElement
+// Character - Eve by J.Gonzales - https://www.mixamo.com/#/?query=eve&type=Character - Convert to glb in Blander
+// Animations - Punching - https://www.mixamo.com/#/?query=punching&type=Motion%2CMotionPack - Convert to glb in Blander
+gltfLoader.load('models/eve@punching.glb', (gltf) => {
+  gltf.scene.traverse(function (child) {
+    if (child instanceof THREE.Group) {
+      modelGroup = child
+    }
+    if ((<THREE.Mesh>child).isMesh) {
+      child.castShadow = true
+      child.frustumCulled = false;
+      (child as THREE.Mesh).geometry.computeVertexNormals()
+    }
+  });
 
-dropzone.ondragover = dropzone.ondragenter = function (evt) {
-  evt.preventDefault()
-};
-dropzone.ondrop = function (evt: DragEvent) {
-  evt.stopPropagation()
-  evt.preventDefault()
+  mixer = new THREE.AnimationMixer(gltf.scene);
+  mixer.clipAction((gltf as any).animations[0]).play()
 
-  // Clear the scene
-  for (let i = scene.children.length - 1; i >= 0; i--) {
-    scene.remove(scene.children[i]);
-  }
+  modelDragBox = new THREE.Mesh(new THREE.BoxGeometry(.5, 1.3, .5), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0 }))
+  modelDragBox.geometry.translate(0, .65, 0)
+  scene.add(modelDragBox)
+  sceneMeshes.push(modelDragBox);
 
-  // Clear the checkboxes
-  const myNode = document.getElementById("animationsPanel") as HTMLDivElement;
-  while (myNode.firstChild) {
-    myNode.removeChild(myNode.lastChild as any);
-  }
+  boxHelper = new THREE.BoxHelper(modelDragBox, 0xffff00)
+  boxHelper.visible = false
+  scene.add(boxHelper)
 
-  const axesHelper = new THREE.AxesHelper(5)
-  scene.add(axesHelper)
+  scene.add(gltf.scene)
 
-  const light1 = new THREE.DirectionalLight(new THREE.Color(0xffcccc));
-  light1.position.set(-1, 1, 1)
-  scene.add(light1);
+  modelReady = true
+}, (xhr) => {
+  console.log((xhr.loaded / xhr.total * 100) + '% loaded')
+}, (error) => {
+  console.log(error);
+})
 
-  const light2 = new THREE.DirectionalLight(new THREE.Color(0xccffcc));
-  light2.position.set(1, 1, 1)
-  scene.add(light2);
-
-  const light3 = new THREE.DirectionalLight(new THREE.Color(0xccccff));
-  light3.position.set(0, -1, 0)
-  scene.add(light3);
-
-  const files = (evt.dataTransfer as DataTransfer).files
-  const reader = new FileReader();
-  reader.onload = function () {
-    gltfLoader.parse(reader.result as string, "/",
-      (gltf: GLTF) => {
-        console.log(gltf.scene)
-        mixer = new THREE.AnimationMixer(gltf.scene);
-        console.log(gltf.animations)
-
-        if (gltf.animations.length > 0) {
-          const animationsPanel: HTMLDivElement = document.getElementById("animationsPanel") as HTMLDivElement
-          const ul: HTMLUListElement = document.createElement("UL") as HTMLUListElement
-          const ulElem = animationsPanel.appendChild(ul)
-
-          gltf.animations.forEach((a: THREE.AnimationClip, i) => {
-            const li: HTMLLIElement = document.createElement("UL") as HTMLLIElement
-            const liElem = ulElem.appendChild(li)
-
-            const checkBox = document.createElement("INPUT") as HTMLInputElement
-            checkBox.id = "checkbox_" + i
-            checkBox.type = "checkbox"
-            checkBox.addEventListener("change", (e: Event) => {
-              if ((e.target as HTMLInputElement).checked) {
-                mixer.clipAction((gltf as any).animations[i]).play()
-              } else {
-                mixer.clipAction((gltf as any).animations[i]).stop()
-              }
-            })
-            liElem.appendChild(checkBox)
-
-            const label = document.createElement("LABEL") as HTMLLabelElement
-            label.htmlFor = "checkbox_" + i
-            label.innerHTML = a.name;
-            liElem.appendChild(label)
-          })
-        } else {
-          const animationsPanel: HTMLDivElement = document.getElementById("animationsPanel") as HTMLDivElement
-          animationsPanel.innerHTML = "No animations found in model"
-        }
-
-        scene.add(gltf.scene)
-
-        const bbox = new THREE.Box3().setFromObject(gltf.scene);
-        controls.target.x = ((bbox.min.x + bbox.max.x) / 2)
-        controls.target.y = ((bbox.min.y + bbox.max.y) / 2)
-        controls.target.z = ((bbox.min.z + bbox.max.z) / 2)
-
-        modelReady = true
-      },
-      (error) => {
-        console.log(error);
-      }
-    )
-  }
-  reader.readAsArrayBuffer(files[0]);
-};
-
-window.addEventListener('resize', onWindowResize, false)
-function onWindowResize() {
+window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight
   camera.updateProjectionMatrix()
   renderer.setSize(window.innerWidth, window.innerHeight)
   render()
-}
+}, false)
 
 const stats = Stats()
 document.body.appendChild(stats.dom)
@@ -127,9 +117,13 @@ const clock: THREE.Clock = new THREE.Clock()
 var animate = function () {
   requestAnimationFrame(animate)
 
-  controls.update()
+  orbitControls.update()
 
-  if (modelReady) mixer.update(clock.getDelta());
+  if (modelReady) {
+    mixer.update(clock.getDelta());
+    modelGroup.position.copy(modelDragBox.position)
+    boxHelper.update()
+  }
 
   render()
 
