@@ -2,7 +2,8 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import Stats from 'three/examples/jsm/libs/stats.module'
-import { TransformControls } from 'three/examples/jsm/controls/TransformControls'
+import { DragControls } from 'three/examples/jsm/controls/DragControls'
+import { Reflector } from 'three/examples/jsm/objects/Reflector'
 
 const scene: THREE.Scene = new THREE.Scene()
 const axesHelper = new THREE.AxesHelper(5)
@@ -18,7 +19,7 @@ light2.position.set(-2.5, 2.5, 2.5)
 light2.castShadow = true
 scene.add(light2)
 
-const camera: THREE.PerspectiveCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 100)
+const camera: THREE.PerspectiveCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 1000)
 camera.position.set(0.8, 1.4, 1.0)
 
 const renderer: THREE.WebGLRenderer = new THREE.WebGLRenderer()
@@ -30,44 +31,49 @@ const orbitControls = new OrbitControls(camera, renderer.domElement)
 orbitControls.screenSpacePanning = true
 orbitControls.target.set(0, 1, 0)
 
-const transformControls = new TransformControls(camera, renderer.domElement)
-scene.add(transformControls);
-transformControls.addEventListener("mouseDown", (event) => {
-  orbitControls.enabled = false
-});
-transformControls.addEventListener("mouseUp", (event) => {
-  orbitControls.enabled = true
-});
+const sceneMeshes: THREE.Mesh[] = new Array()
+let boxHelper: THREE.BoxHelper
 
-window.addEventListener('keydown', (event: KeyboardEvent) => {
-  switch (event.key) {
-    case "g":
-      transformControls.setMode("translate")
-      break
-    case "r":
-      transformControls.setMode("rotate")
-      break
-    case "s":
-      transformControls.setMode("scale")
-      break
-  }
+const dragControls = new DragControls(sceneMeshes, camera, renderer.domElement)
+dragControls.addEventListener("hoveron", (event) => {
+  boxHelper.visible = true
+});
+dragControls.addEventListener("hoveroff", (event) => {
+  boxHelper.visible = false
+});
+dragControls.addEventListener("drag", (event) => {
+  event.object.position.y = 0;
+  orbitControls.enabled = false;
+});
+dragControls.addEventListener('dragstart', (event) => {
+  boxHelper.visible = true
+  orbitControls.enabled = false
+})
+dragControls.addEventListener('dragend', (event) => {
+  boxHelper.visible = false
+  orbitControls.enabled = true
 })
 
-const planeGeometry = new THREE.PlaneGeometry(25, 25)
+const planeGeometry: THREE.PlaneGeometry = new THREE.PlaneGeometry(25, 25)
 const texture = new THREE.TextureLoader().load("img/grid.png")
-const plane = new THREE.Mesh(planeGeometry, new THREE.MeshPhongMaterial({ map: texture }))
+const plane: THREE.Mesh = new THREE.Mesh(planeGeometry, new THREE.MeshPhongMaterial({ map: texture }))
 plane.rotateX(-Math.PI / 2)
 plane.receiveShadow = true
 scene.add(plane)
 
 let mixer: THREE.AnimationMixer
-let modelReady = false
-const gltfLoader = new GLTFLoader()
+let modelReady = false;
+const gltfLoader: GLTFLoader = new GLTFLoader()
+let modelGroup: THREE.Group
+let modelDragBox: THREE.Mesh
 
 // Character - Eve by J.Gonzales - https://www.mixamo.com/#/?query=eve&type=Character - Convert to glb in Blander
 // Animations - Punching - https://www.mixamo.com/#/?query=punching&type=Motion%2CMotionPack - Convert to glb in Blander
 gltfLoader.load('models/eve@punching.glb', (gltf) => {
   gltf.scene.traverse(function (child) {
+    if (child instanceof THREE.Group) {
+      modelGroup = child
+    }
     if ((<THREE.Mesh>child).isMesh) {
       child.castShadow = true
       child.frustumCulled = false;
@@ -78,7 +84,14 @@ gltfLoader.load('models/eve@punching.glb', (gltf) => {
   mixer = new THREE.AnimationMixer(gltf.scene);
   mixer.clipAction((gltf as any).animations[0]).play()
 
-  transformControls.attach(gltf.scene);
+  modelDragBox = new THREE.Mesh(new THREE.BoxGeometry(.5, 1.3, .5), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0 }))
+  modelDragBox.geometry.translate(0, .65, 0)
+  scene.add(modelDragBox)
+  sceneMeshes.push(modelDragBox);
+
+  boxHelper = new THREE.BoxHelper(modelDragBox, 0xffff00)
+  boxHelper.visible = false
+  scene.add(boxHelper)
 
   scene.add(gltf.scene)
 
@@ -89,12 +102,55 @@ gltfLoader.load('models/eve@punching.glb', (gltf) => {
   console.log(error);
 })
 
-window.addEventListener('resize', () => {
+window.addEventListener('resize', onWindowResize, false)
+function onWindowResize() {
   camera.aspect = window.innerWidth / window.innerHeight
   camera.updateProjectionMatrix()
   renderer.setSize(window.innerWidth, window.innerHeight)
   render()
-}, false)
+}
+
+const mirrorBack1: Reflector = new Reflector(new THREE.PlaneBufferGeometry(2, 2), {
+  color: new THREE.Color(0x7F7F7F),
+  textureWidth: window.innerWidth * window.devicePixelRatio,
+  textureHeight: window.innerHeight * window.devicePixelRatio,
+});
+
+mirrorBack1.position.y = 1
+mirrorBack1.position.z = -1
+scene.add(mirrorBack1);
+
+const mirrorBack2: Reflector = new Reflector(new THREE.PlaneBufferGeometry(2, 2), {
+  color: new THREE.Color(0x7F7F7F),
+  textureWidth: window.innerWidth * window.devicePixelRatio,
+  textureHeight: window.innerHeight * window.devicePixelRatio,
+});
+
+mirrorBack2.position.y = 1
+mirrorBack2.position.z = -2
+scene.add(mirrorBack2);
+
+const mirrorFront1: Reflector = new Reflector(new THREE.PlaneBufferGeometry(2, 2), {
+  color: new THREE.Color(0x7F7F7F),
+  //clipBias: 0.003,
+  textureWidth: window.innerWidth * window.devicePixelRatio,
+  textureHeight: window.innerHeight * window.devicePixelRatio,
+});
+mirrorFront1.position.y = 1
+mirrorFront1.position.z = 1
+mirrorFront1.rotateY(Math.PI);
+scene.add(mirrorFront1);
+
+const mirrorFront2: Reflector = new Reflector(new THREE.PlaneBufferGeometry(2, 2), {
+  color: new THREE.Color(0x7F7F7F),
+  //clipBias: 0.003,
+  textureWidth: window.innerWidth * window.devicePixelRatio,
+  textureHeight: window.innerHeight * window.devicePixelRatio,
+});
+mirrorFront2.position.y = 1
+mirrorFront2.position.z = 2
+mirrorFront2.rotateY(Math.PI);
+scene.add(mirrorFront2);
 
 const stats = Stats()
 document.body.appendChild(stats.dom)
@@ -108,6 +164,8 @@ var animate = function () {
 
   if (modelReady) {
     mixer.update(clock.getDelta());
+    modelGroup.position.copy(modelDragBox.position)
+    boxHelper.update()
   }
 
   render()
