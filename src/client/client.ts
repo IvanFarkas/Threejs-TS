@@ -1,44 +1,73 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import Stats from 'three/examples/jsm/libs/stats.module'
-import { GUI } from 'three/examples/jsm/libs/dat.gui.module'
 
 const scene: THREE.Scene = new THREE.Scene()
-scene.background = new THREE.Color(0x87ceeb)
+const axesHelper = new THREE.AxesHelper(5)
+scene.add(axesHelper)
 
-const ambientLight = new THREE.AmbientLight(0x888888);
-scene.add(ambientLight);
-
-const light1 = new THREE.DirectionalLight();
-light1.position.set(5, 10, 5)
-light1.castShadow = true
-light1.shadow.bias = -0.0002
-light1.shadow.mapSize.height = 1024
-light1.shadow.mapSize.width = 1024
-light1.shadow.camera.left = -10
-light1.shadow.camera.right = 10
-light1.shadow.camera.top = 10
-light1.shadow.camera.bottom = -10
-scene.add(light1);
-
-const camera: THREE.PerspectiveCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 100)
-camera.position.set(0, 8, 0)
+const camera: THREE.PerspectiveCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
+camera.position.z = 2
 
 const renderer: THREE.WebGLRenderer = new THREE.WebGLRenderer()
-renderer.setSize(window.innerWidth, window.innerHeight)
+renderer.physicallyCorrectLights = true
 renderer.shadowMap.enabled = true
+renderer.outputEncoding = THREE.sRGBEncoding
+renderer.setSize(window.innerWidth, window.innerHeight)
 document.body.appendChild(renderer.domElement)
 
-const orbitControls = new OrbitControls(camera, renderer.domElement)
-orbitControls.dampingFactor = .1
-orbitControls.enableDamping = true
+const controls = new OrbitControls(camera, renderer.domElement)
 
-const planeGeometry: THREE.PlaneGeometry = new THREE.PlaneGeometry(25, 25)
-const texture = new THREE.TextureLoader().load("img/grid.png")
-const plane: THREE.Mesh = new THREE.Mesh(planeGeometry, new THREE.MeshPhongMaterial({ map: texture }))
-plane.rotateX(-Math.PI / 2)
-plane.receiveShadow = true
-scene.add(plane)
+// const material = new THREE.LineBasicMaterial({ color: 0xff0000 });
+// const points = new Array();
+// points.push(new THREE.Vector3(0, 0, 0));
+// points.push(new THREE.Vector3(0, 0, .25));
+// const geometry = new THREE.BufferGeometry().setFromPoints(points);
+// const line = new THREE.Line(geometry, material);
+// scene.add(line);
+
+var arrowHelper = new THREE.ArrowHelper(
+  new THREE.Vector3(),
+  new THREE.Vector3(),
+  .25,
+  0xffff00);
+scene.add(arrowHelper);
+
+const material: THREE.MeshNormalMaterial = new THREE.MeshNormalMaterial()
+
+const boxGeometry: THREE.BoxGeometry = new THREE.BoxGeometry(.2, .2, .2)
+const coneGeometry = new THREE.ConeGeometry(.05, .2, 8);
+
+const raycaster = new THREE.Raycaster();
+const sceneMeshes = new Array()
+
+const loader = new GLTFLoader()
+loader.load('models/monkey_textured.glb', (gltf) => {
+  gltf.scene.traverse(function (child) {
+    if ((<THREE.Mesh>child).isMesh) {
+      let m = <THREE.Mesh>child
+      m.receiveShadow = true
+      m.castShadow = true;
+      // (<THREE.MeshStandardMaterial>m.material).flatShading = true
+      sceneMeshes.push(m)
+    }
+    if ((<THREE.Light>child).isLight) {
+      let l = <THREE.Light>child
+      l.castShadow = true
+      l.shadow.bias = -.003
+      l.shadow.mapSize.width = 2048
+      l.shadow.mapSize.height = 2048
+    }
+  })
+  scene.add(gltf.scene);
+  //sceneMeshes.push(gltf.scene)
+}, (xhr) => {
+  console.log((xhr.loaded / xhr.total * 100) + '% loaded')
+},
+  (error) => {
+    console.log(error);
+  });
 
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight
@@ -47,104 +76,77 @@ window.addEventListener('resize', () => {
   render()
 }, false)
 
-const cubeRenderTarget1: THREE.WebGLCubeRenderTarget = new THREE.WebGLCubeRenderTarget(128, { format: THREE.RGBFormat, generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter });
-const cubeRenderTarget2: THREE.WebGLCubeRenderTarget = new THREE.WebGLCubeRenderTarget(128, { format: THREE.RGBFormat, generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter });
-const cubeRenderTarget3: THREE.WebGLCubeRenderTarget = new THREE.WebGLCubeRenderTarget(128, { format: THREE.RGBFormat, generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter });
-const cubeCamera1: THREE.CubeCamera = new THREE.CubeCamera(.1, 1000, cubeRenderTarget1);
-const cubeCamera2: THREE.CubeCamera = new THREE.CubeCamera(.1, 1000, cubeRenderTarget2);
-const cubeCamera3: THREE.CubeCamera = new THREE.CubeCamera(.1, 1000, cubeRenderTarget3);
+renderer.domElement.addEventListener('dblclick', onDoubleClick, false);
+renderer.domElement.addEventListener('mousemove', onMouseMove, false);
 
-const pivot1 = new THREE.Object3D();
-scene.add(pivot1);
-const pivot2 = new THREE.Object3D();
-scene.add(pivot2);
-const pivot3 = new THREE.Object3D();
-scene.add(pivot3);
+function onMouseMove(event: MouseEvent) {
+  const mouse = {
+    x: (event.clientX / renderer.domElement.clientWidth) * 2 - 1,
+    y: -(event.clientY / renderer.domElement.clientHeight) * 2 + 1
+  }
 
-const material1 = new THREE.MeshPhongMaterial({
-  shininess: 100,
-  color: 0xffffff,
-  specular: 0xffffff,
-  envMap: cubeRenderTarget1.texture,
-  refractionRatio: .5,
-  transparent: true,
-  side: THREE.BackSide,
-  combine: THREE.MixOperation
-});
-const material2 = new THREE.MeshPhongMaterial({
-  shininess: 100,
-  color: 0xffffff,
-  specular: 0xffffff,
-  envMap: cubeRenderTarget2.texture,
-  refractionRatio: .5,
-  transparent: true,
-  side: THREE.BackSide,
-  combine: THREE.MixOperation
-});
-const material3 = new THREE.MeshPhongMaterial({
-  shininess: 100,
-  color: 0xffffff,
-  specular: 0xffffff,
-  envMap: cubeRenderTarget3.texture,
-  refractionRatio: .5,
-  transparent: true,
-  side: THREE.BackSide,
-  combine: THREE.MixOperation
-});
+  // console.log(mouse)
 
-cubeRenderTarget1.texture.mapping = THREE.CubeRefractionMapping
-cubeRenderTarget2.texture.mapping = THREE.CubeRefractionMapping
-cubeRenderTarget3.texture.mapping = THREE.CubeRefractionMapping
+  raycaster.setFromCamera(mouse, camera);
 
-const ball1 = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 32), material1);
-ball1.position.set(1, 1.1, 0);
-ball1.castShadow = true;
-ball1.receiveShadow = true;
-ball1.add(cubeCamera1);
-pivot1.add(ball1);
+  const intersects = raycaster.intersectObjects(sceneMeshes, false);
 
-const ball2 = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 32), material2);
-ball2.position.set(3.1, 1.1, 0);
-ball2.castShadow = true;
-ball2.receiveShadow = true;
-ball2.add(cubeCamera2);
-pivot2.add(ball2);
+  if (intersects.length > 0) {
+    // console.log(sceneMeshes.length + " " + intersects.length)
+    // console.log(intersects[0])
+    // console.log(intersects[0].object.userData.name + " " + intersects[0].distance + " ")
+    // console.log(intersects[0].face!.normal)
+    // line.position.set(0, 0, 0);
+    // line.lookAt(intersects[0].face!.normal);
+    // line.position.copy(intersects[0].point);
 
-const ball3 = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 32), material3);
-ball3.position.set(5.2, 1.1, 0);
-ball3.castShadow = true;
-ball3.receiveShadow = true;
-ball3.add(cubeCamera3);
-pivot3.add(ball3);
+    let n = new THREE.Vector3();
+    n.copy((intersects[0].face as THREE.Face).normal);
+    n.transformDirection(intersects[0].object.matrixWorld);
 
-const data = { refractionRatio: 0 }
+    arrowHelper.setDirection(n);
+    arrowHelper.position.copy(intersects[0].point);
+  }
+}
 
-const gui = new GUI()
-const refractionFolder = gui.addFolder('Refraction')
-refractionFolder.add(data, 'refractionRatio', 0, 1, .01).onChange((v: number) => {
-  material1.refractionRatio = v
-  material2.refractionRatio = v
-  material3.refractionRatio = v
-})
-refractionFolder.open()
+function onDoubleClick(event: MouseEvent) {
+  const mouse = {
+    x: (event.clientX / renderer.domElement.clientWidth) * 2 - 1,
+    y: -(event.clientY / renderer.domElement.clientHeight) * 2 + 1
+  }
+  raycaster.setFromCamera(mouse, camera);
+
+  const intersects = raycaster.intersectObjects(sceneMeshes, false);
+
+  if (intersects.length > 0) {
+    let n = new THREE.Vector3();
+    n.copy((intersects[0].face as THREE.Face).normal);
+    n.transformDirection(intersects[0].object.matrixWorld);
+
+    // const cube: THREE.Mesh = new THREE.Mesh(boxGeometry, material)
+    const cube: THREE.Mesh = new THREE.Mesh(coneGeometry, material)
+
+    cube.lookAt(n);
+    cube.rotateX(Math.PI / 2)
+    cube.position.copy(intersects[0].point);
+    cube.position.addScaledVector(n, .1)
+
+    scene.add(cube)
+    sceneMeshes.push(cube)
+  }
+}
 
 const stats = Stats()
 document.body.appendChild(stats.dom)
 
-const clock: THREE.Clock = new THREE.Clock()
-
 var animate = function () {
   requestAnimationFrame(animate)
 
-  const delta = clock.getDelta();
-  ball1.rotateY(-0.2 * delta);
-  pivot1.rotateY(0.2 * delta);
-  ball2.rotateY(-0.3 * delta);
-  pivot2.rotateY(0.3 * delta);
-  ball3.rotateY(-0.4 * delta);
-  pivot3.rotateY(0.4 * delta);
+  controls.update()
 
-  orbitControls.update()
+  // if (sceneMeshes.length > 1) {
+  //   sceneMeshes[1].rotation.x += .002
+  // }
 
   render()
 
@@ -152,16 +154,6 @@ var animate = function () {
 };
 
 function render() {
-  ball1.visible = false
-  cubeCamera1.update(renderer, scene);
-  ball1.visible = true
-  ball2.visible = false
-  cubeCamera2.update(renderer, scene);
-  ball2.visible = true
-  ball3.visible = false
-  cubeCamera3.update(renderer, scene);
-  ball3.visible = true
-
   renderer.render(scene, camera)
 }
 animate();
