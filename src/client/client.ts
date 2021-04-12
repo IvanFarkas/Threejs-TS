@@ -2,23 +2,23 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import Stats from 'three/examples/jsm/libs/stats.module'
-import { DragControls } from 'three/examples/jsm/controls/DragControls'
+import { TransformControls } from 'three/examples/jsm/controls/TransformControls'
 
 const scene: THREE.Scene = new THREE.Scene()
 const axesHelper = new THREE.AxesHelper(5)
 scene.add(axesHelper)
 
-var light1 = new THREE.PointLight();
+var light1 = new THREE.PointLight()
 light1.position.set(2.5, 2.5, 2.5)
 light1.castShadow = true
-scene.add(light1);
+scene.add(light1)
 
-var light2 = new THREE.PointLight();
+var light2 = new THREE.PointLight()
 light2.position.set(-2.5, 2.5, 2.5)
 light2.castShadow = true
-scene.add(light2);
+scene.add(light2)
 
-const camera: THREE.PerspectiveCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 1000)
+const camera: THREE.PerspectiveCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 100)
 camera.position.set(0.8, 1.4, 1.0)
 
 const renderer: THREE.WebGLRenderer = new THREE.WebGLRenderer()
@@ -30,50 +30,44 @@ const orbitControls = new OrbitControls(camera, renderer.domElement)
 orbitControls.screenSpacePanning = true
 orbitControls.target.set(0, 1, 0)
 
-const sceneMeshes: THREE.Mesh[] = new Array()
-let boxHelper: THREE.BoxHelper
-
-const dragControls = new DragControls(sceneMeshes, camera, renderer.domElement)
-dragControls.addEventListener("hoveron", (event) => {
-  boxHelper.visible = true
+const transformControls = new TransformControls(camera, renderer.domElement)
+scene.add(transformControls);
+transformControls.addEventListener("mouseDown", (event) => {
   orbitControls.enabled = false
 });
-dragControls.addEventListener("hoveroff", (event) => {
-  boxHelper.visible = false
+transformControls.addEventListener("mouseUp", (event) => {
   orbitControls.enabled = true
 });
-dragControls.addEventListener("drag", (event) => {
-  event.object.position.y = 0
-});
-dragControls.addEventListener('dragstart', (event) => {
-  boxHelper.visible = true
-  orbitControls.enabled = false
-})
-dragControls.addEventListener('dragend', (event) => {
-  boxHelper.visible = false
-  orbitControls.enabled = true
+
+window.addEventListener('keydown', (event: KeyboardEvent) => {
+  switch (event.key) {
+    case "g":
+      transformControls.setMode("translate")
+      break
+    case "r":
+      transformControls.setMode("rotate")
+      break
+    case "s":
+      transformControls.setMode("scale")
+      break
+  }
 })
 
-const planeGeometry: THREE.PlaneGeometry = new THREE.PlaneGeometry(25, 25)
+const planeGeometry = new THREE.PlaneGeometry(25, 25)
 const texture = new THREE.TextureLoader().load("img/grid.png")
-const plane: THREE.Mesh = new THREE.Mesh(planeGeometry, new THREE.MeshPhongMaterial({ map: texture }))
+const plane = new THREE.Mesh(planeGeometry, new THREE.MeshPhongMaterial({ map: texture }))
 plane.rotateX(-Math.PI / 2)
 plane.receiveShadow = true
 scene.add(plane)
 
 let mixer: THREE.AnimationMixer
-let modelReady = false;
-const gltfLoader: GLTFLoader = new GLTFLoader();
-let modelGroup: THREE.Group
-let modelDragBox: THREE.Mesh
+let modelReady = false
+const gltfLoader = new GLTFLoader()
 
 // Character - Eve by J.Gonzales - https://www.mixamo.com/#/?query=eve&type=Character - Convert to glb in Blander
 // Animations - Punching - https://www.mixamo.com/#/?query=punching&type=Motion%2CMotionPack - Convert to glb in Blander
 gltfLoader.load('models/eve@punching.glb', (gltf) => {
   gltf.scene.traverse(function (child) {
-    if (child instanceof THREE.Group) {
-      modelGroup = child
-    }
     if ((<THREE.Mesh>child).isMesh) {
       child.castShadow = true
       child.frustumCulled = false;
@@ -84,14 +78,7 @@ gltfLoader.load('models/eve@punching.glb', (gltf) => {
   mixer = new THREE.AnimationMixer(gltf.scene);
   mixer.clipAction((gltf as any).animations[0]).play()
 
-  modelDragBox = new THREE.Mesh(new THREE.BoxGeometry(.5, 1.3, .5), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0 }))
-  modelDragBox.geometry.translate(0, .65, 0)
-  scene.add(modelDragBox)
-  sceneMeshes.push(modelDragBox);
-
-  boxHelper = new THREE.BoxHelper(modelDragBox, 0xffff00)
-  boxHelper.visible = false
-  scene.add(boxHelper)
+  transformControls.attach(gltf.scene);
 
   scene.add(gltf.scene)
 
@@ -121,8 +108,6 @@ var animate = function () {
 
   if (modelReady) {
     mixer.update(clock.getDelta());
-    modelGroup.position.copy(modelDragBox.position)
-    boxHelper.update()
   }
 
   render()
