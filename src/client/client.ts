@@ -1,23 +1,28 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import Stats from 'three/examples/jsm/libs/stats.module'
+import { GUI } from 'three/examples/jsm/libs/dat.gui.module'
 
 const scene: THREE.Scene = new THREE.Scene()
 scene.background = new THREE.Color(0x87ceeb)
 
-const ambientLight = new THREE.AmbientLight(0xaaaaaa);
+const ambientLight = new THREE.AmbientLight(0x888888);
 scene.add(ambientLight);
 
-const light1 = new THREE.PointLight();
-light1.position.set(10, 10, 10)
+const light1 = new THREE.DirectionalLight();
+light1.position.set(5, 10, 5)
 light1.castShadow = true
 light1.shadow.bias = -0.0002
 light1.shadow.mapSize.height = 1024
 light1.shadow.mapSize.width = 1024
+light1.shadow.camera.left = -10
+light1.shadow.camera.right = 10
+light1.shadow.camera.top = 10
+light1.shadow.camera.bottom = -10
 scene.add(light1);
 
 const camera: THREE.PerspectiveCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 100)
-camera.position.set(1.75, 1.75, 3.5)
+camera.position.set(0, 8, 0)
 
 const renderer: THREE.WebGLRenderer = new THREE.WebGLRenderer()
 renderer.setSize(window.innerWidth, window.innerHeight)
@@ -59,24 +64,37 @@ scene.add(pivot3);
 const material1 = new THREE.MeshPhongMaterial({
   shininess: 100,
   color: 0xffffff,
-  specular: 0xffaa00,
-  reflectivity: 0.9,
-  envMap: cubeRenderTarget1.texture
+  specular: 0xffffff,
+  envMap: cubeRenderTarget1.texture,
+  refractionRatio: .5,
+  transparent: true,
+  side: THREE.BackSide,
+  combine: THREE.MixOperation
 });
 const material2 = new THREE.MeshPhongMaterial({
   shininess: 100,
   color: 0xffffff,
-  reflectivity: 0.9,
-  specular: 0xffaa00,
-  envMap: cubeRenderTarget2.texture
+  specular: 0xffffff,
+  envMap: cubeRenderTarget2.texture,
+  refractionRatio: .5,
+  transparent: true,
+  side: THREE.BackSide,
+  combine: THREE.MixOperation
 });
 const material3 = new THREE.MeshPhongMaterial({
   shininess: 100,
   color: 0xffffff,
-  specular: 0xffaa00,
-  reflectivity: 0.9,
-  envMap: cubeRenderTarget3.texture
+  specular: 0xffffff,
+  envMap: cubeRenderTarget3.texture,
+  refractionRatio: .5,
+  transparent: true,
+  side: THREE.BackSide,
+  combine: THREE.MixOperation
 });
+
+cubeRenderTarget1.texture.mapping = THREE.CubeRefractionMapping
+cubeRenderTarget2.texture.mapping = THREE.CubeRefractionMapping
+cubeRenderTarget3.texture.mapping = THREE.CubeRefractionMapping
 
 const ball1 = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 32), material1);
 ball1.position.set(1, 1.1, 0);
@@ -98,6 +116,17 @@ ball3.castShadow = true;
 ball3.receiveShadow = true;
 ball3.add(cubeCamera3);
 pivot3.add(ball3);
+
+const data = { refractionRatio: 0 }
+
+const gui = new GUI()
+const refractionFolder = gui.addFolder('Refraction')
+refractionFolder.add(data, 'refractionRatio', 0, 1, .01).onChange((v: number) => {
+  material1.refractionRatio = v
+  material2.refractionRatio = v
+  material3.refractionRatio = v
+})
+refractionFolder.open()
 
 const stats = Stats()
 document.body.appendChild(stats.dom)
