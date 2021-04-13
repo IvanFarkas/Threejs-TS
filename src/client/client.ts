@@ -5,6 +5,8 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import Stats from 'three/examples/jsm/libs/stats.module'
 import { GUI } from 'three/examples/jsm/libs/dat.gui.module'
 import * as CANNON from 'cannon'
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader'
+import CannonDebugRenderer from './utils/cannonDebugRenderer.js'
 
 const scene: THREE.Scene = new THREE.Scene()
 const axesHelper = new THREE.AxesHelper(5)
@@ -54,7 +56,7 @@ const phongMaterial: THREE.MeshPhongMaterial = new THREE.MeshPhongMaterial()
 
 const cubeGeometry: THREE.BoxGeometry = new THREE.BoxGeometry(1, 1, 1)
 const cubeMesh: THREE.Mesh = new THREE.Mesh(cubeGeometry, normalMaterial)
-cubeMesh.position.x = -3
+cubeMesh.position.x = -4
 cubeMesh.position.y = 3
 cubeMesh.castShadow = true
 scene.add(cubeMesh)
@@ -68,7 +70,7 @@ world.addBody(cubeBody)
 
 const sphereGeometry: THREE.SphereGeometry = new THREE.SphereGeometry()
 const sphereMesh: THREE.Mesh = new THREE.Mesh(sphereGeometry, normalMaterial)
-sphereMesh.position.x = -1
+sphereMesh.position.x = -2
 sphereMesh.position.y = 3
 sphereMesh.castShadow = true
 scene.add(sphereMesh)
@@ -80,23 +82,29 @@ sphereBody.position.y = sphereMesh.position.y
 sphereBody.position.z = sphereMesh.position.z
 world.addBody(sphereBody)
 
+const cylinderGeometry: THREE.CylinderGeometry = new THREE.CylinderGeometry(1, 1, 2, 8)
+const cylinderMesh: THREE.Mesh = new THREE.Mesh(cylinderGeometry, normalMaterial)
+cylinderMesh.position.x = 0
+cylinderMesh.position.y = 3
+cylinderMesh.castShadow = true
+scene.add(cylinderMesh)
+const cylinderShape = new CANNON.Cylinder(1, 1, 2, 8)
+const cylinderBody = new CANNON.Body({ mass: 1 });
+const cylinderQuaternion = new CANNON.Quaternion()
+cylinderQuaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), Math.PI / 2)
+cylinderBody.addShape(cylinderShape, new CANNON.Vec3, cylinderQuaternion)
+cylinderBody.position.x = cylinderMesh.position.x
+cylinderBody.position.y = cylinderMesh.position.y
+cylinderBody.position.z = cylinderMesh.position.z
+world.addBody(cylinderBody)
+
 const icosahedronGeometry: THREE.IcosahedronGeometry = new THREE.IcosahedronGeometry(1, 0)
 const icosahedronMesh: THREE.Mesh = new THREE.Mesh(icosahedronGeometry, normalMaterial)
-icosahedronMesh.position.x = 1
+icosahedronMesh.position.x = 2
 icosahedronMesh.position.y = 3
 icosahedronMesh.castShadow = true
 scene.add(icosahedronMesh)
-let position = icosahedronMesh.geometry.attributes.position.array
-const icosahedronPoints: CANNON.Vec3[] = []
-for (let i = 0; i < position.length; i += 3) {
-  icosahedronPoints.push(new CANNON.Vec3(position[i], position[i + 1], position[i + 2]));
-}
-const icosahedronFaces: number[][] = []
-for (let i = 0; i < position.length / 3; i += 3) {
-  icosahedronFaces.push([i, i + 1, i + 2])
-}
-
-const icosahedronShape = new CANNON.ConvexPolyhedron(icosahedronPoints, icosahedronFaces)
+const icosahedronShape = CreateConvexPolyhedron(icosahedronMesh.geometry)
 const icosahedronBody = new CANNON.Body({ mass: 1 });
 icosahedronBody.addShape(icosahedronShape)
 icosahedronBody.position.x = icosahedronMesh.position.x
@@ -110,16 +118,6 @@ torusKnotMesh.position.x = 4
 torusKnotMesh.position.y = 3
 torusKnotMesh.castShadow = true
 scene.add(torusKnotMesh)
-// position = torusKnotMesh.geometry.attributes.position.array
-// const torusKnotPoints: CANNON.Vec3[] = []
-// for (let i = 0; i < position.length; i += 3) {
-//   torusKnotPoints.push(new CANNON.Vec3(position[i], position[i + 1], position[i + 2]));
-// }
-// const torusKnotFaces: number[][] = []
-// for (let i = 0; i < position.length / 3; i += 3) {
-//   torusKnotFaces.push([i, i + 1, i + 2])
-// }
-// const torusKnotShape = new CANNON.ConvexPolyhedron(torusKnotPoints, torusKnotFaces)
 const torusKnotShape = CreateTrimesh(torusKnotMesh.geometry)
 const torusKnotBody = new CANNON.Body({ mass: 1 });
 torusKnotBody.addShape(torusKnotShape)
@@ -128,12 +126,40 @@ torusKnotBody.position.y = torusKnotMesh.position.y
 torusKnotBody.position.z = torusKnotMesh.position.z
 world.addBody(torusKnotBody)
 
-function CreateTrimesh(geometry: THREE.BufferGeometry) {
-  const vertices = (geometry as THREE.BufferGeometry).attributes.position.array
-  const indices = Object.keys(vertices).map(Number);
-
-  return new CANNON.Trimesh(vertices as [], indices);
-}
+let monkeyMesh: THREE.Object3D
+let monkeyBody: CANNON.Body
+let monkeyLoaded: Boolean = false
+const objLoader: OBJLoader = new OBJLoader();
+objLoader.load(
+  'models/monkey.obj',
+  (object) => {
+    scene.add(object)
+    monkeyMesh = object.children[0];
+    (monkeyMesh as THREE.Mesh).material = normalMaterial
+    monkeyMesh.position.x = 0
+    monkeyMesh.position.y = 20
+    //const monkeyShape = CreateTrimesh((monkeyMesh as THREE.Mesh).geometry)
+    monkeyBody = new CANNON.Body({ mass: 1 });
+    //monkeyBody.addShape(monkeyShape)
+    //monkeyBody.addShape(cubeShape)
+    // monkeyBody.addShape(sphereShape)
+    // monkeyBody.addShape(cylinderShape)
+    monkeyBody.addShape(icosahedronShape)
+    // monkeyBody.addShape(new CANNON.Plane())
+    // monkeyBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), Math.PI / 2)
+    monkeyBody.position.x = monkeyMesh.position.x
+    monkeyBody.position.y = monkeyMesh.position.y
+    monkeyBody.position.z = monkeyMesh.position.z
+    world.addBody(monkeyBody)
+    monkeyLoaded = true
+  },
+  (xhr) => {
+    console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+  },
+  (error) => {
+    console.log('An error happened');
+  }
+);
 
 const planeGeometry: THREE.PlaneGeometry = new THREE.PlaneGeometry(25, 25)
 const planeMesh: THREE.Mesh = new THREE.Mesh(planeGeometry, phongMaterial)
@@ -145,6 +171,28 @@ const planeBody = new CANNON.Body({ mass: 0 })
 planeBody.addShape(planeShape)
 planeBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2)
 world.addBody(planeBody)
+
+function CreateTrimesh(geometry: THREE.BufferGeometry): CANNON.Trimesh {
+  const vertices: number[] = <number[]>geometry.attributes.position.array
+  const indices: number[] = Object.keys(vertices).map(Number);
+  return new CANNON.Trimesh(vertices, indices);
+}
+
+function CreateConvexPolyhedron(geometry: THREE.BufferGeometry): CANNON.ConvexPolyhedron {
+  const position = geometry.attributes.position.array
+  const points: CANNON.Vec3[] = []
+  for (let i = 0; i < position.length; i += 3) {
+    const x = position[i]
+    const y = position[i + 1]
+    const z = position[i + 2]
+    points.push(new CANNON.Vec3(x, y, z));
+  }
+  const faces: number[][] = []
+  for (let i = 0; i < position.length / 3; i += 3) {
+    faces.push([i, i + 1, i + 2])
+  }
+  return new CANNON.ConvexPolyhedron(points, faces);
+}
 
 camera.position.y = 4
 camera.position.z = 4
@@ -170,26 +218,33 @@ physicsFolder.open()
 
 const clock: THREE.Clock = new THREE.Clock()
 
+const cannonDebugRenderer = new CannonDebugRenderer(scene, world)
+
 var animate = function () {
   requestAnimationFrame(animate)
 
   controls.update()
 
   let delta = clock.getDelta()
-  if (delta > .1) {
-    delta = .1
-  }
+  if (delta > .1) delta = .1
   world.step(delta)
+  cannonDebugRenderer.update()
 
   // Copy coordinates from Cannon.js to Three.js
   cubeMesh.position.set(cubeBody.position.x, cubeBody.position.y, cubeBody.position.z);
   cubeMesh.quaternion.set(cubeBody.quaternion.x, cubeBody.quaternion.y, cubeBody.quaternion.z, cubeBody.quaternion.w);
   sphereMesh.position.set(sphereBody.position.x, sphereBody.position.y, sphereBody.position.z);
   sphereMesh.quaternion.set(sphereBody.quaternion.x, sphereBody.quaternion.y, sphereBody.quaternion.z, sphereBody.quaternion.w);
+  cylinderMesh.position.set(cylinderBody.position.x, cylinderBody.position.y, cylinderBody.position.z);
+  cylinderMesh.quaternion.set(cylinderBody.quaternion.x, cylinderBody.quaternion.y, cylinderBody.quaternion.z, cylinderBody.quaternion.w);
   icosahedronMesh.position.set(icosahedronBody.position.x, icosahedronBody.position.y, icosahedronBody.position.z);
   icosahedronMesh.quaternion.set(icosahedronBody.quaternion.x, icosahedronBody.quaternion.y, icosahedronBody.quaternion.z, icosahedronBody.quaternion.w);
   torusKnotMesh.position.set(torusKnotBody.position.x, torusKnotBody.position.y, torusKnotBody.position.z);
   torusKnotMesh.quaternion.set(torusKnotBody.quaternion.x, torusKnotBody.quaternion.y, torusKnotBody.quaternion.z, torusKnotBody.quaternion.w);
+  if (monkeyLoaded) {
+    monkeyMesh.position.set(monkeyBody.position.x, monkeyBody.position.y, monkeyBody.position.z);
+    monkeyMesh.quaternion.set(monkeyBody.quaternion.x, monkeyBody.quaternion.y, monkeyBody.quaternion.z, monkeyBody.quaternion.w);
+  }
 
   render()
 
