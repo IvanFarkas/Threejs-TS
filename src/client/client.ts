@@ -1,4 +1,4 @@
-// Physics with Cannon.js - https://sbcode.net/threejs/physics-cannonjs/
+// ConvexPolyhedrons and Compound Shapes - https://sbcode.net/threejs/compounds-versus-convex-polyhedrons/
 
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
@@ -48,9 +48,9 @@ controls.screenSpacePanning = true
 
 const world = new CANNON.World()
 world.gravity.set(0, -9.82, 0)
-//world.broadphase = new CANNON.NaiveBroadphase() //
-//world.solver.iterations = 10
-//world.allowSleep = true
+// world.broadphase = new CANNON.NaiveBroadphase()
+// world.solver.iterations = 10
+// world.allowSleep = true
 
 const normalMaterial: THREE.MeshNormalMaterial = new THREE.MeshNormalMaterial()
 const phongMaterial: THREE.MeshPhongMaterial = new THREE.MeshPhongMaterial()
@@ -61,10 +61,9 @@ let monkeyLoaded: Boolean = false
 
 const objLoader: OBJLoader = new OBJLoader();
 
-// Character
-//   - https://sbcode.net/extra_html/models/monkey.obj
-//   - https://sbcode.net/extra_html/models/monkeyPhysics.obj
-objLoader.load('models/monkey.obj', /* 'models/monkeyPhysics.obj' */(object) => {
+// Character - https://sbcode.net/extra_html/models/monkey.obj
+//objLoader.load('models/monkey.obj', (object) => {
+objLoader.load('models/monkeyPhysics.obj', (object) => {
   //scene.add(object)
 
   const monkeyMesh = object.children[0];
@@ -96,14 +95,14 @@ objLoader.load('models/monkey.obj', /* 'models/monkeyPhysics.obj' */(object) => 
     // const monkeyShape = CannonUtils.CreateConvexPolyhedron((monkeyMesh as THREE.Mesh).geometry)
     // const monkeyShape = CannonUtils.CreateConvexPolyhedron((monkeyCollisionMesh as THREE.Mesh).geometry)
     const monkeyBody = new CANNON.Body({ mass: 1 });
-    //monkeyBody.addShape(monkeyShape)
-    monkeyBody.addShape(new CANNON.Sphere(.8), new CANNON.Vec3(0, .2, 0))// head,
-    monkeyBody.addShape(new CANNON.Sphere(.05), new CANNON.Vec3(0, -.97, 0.46))// chin,
-    monkeyBody.addShape(new CANNON.Sphere(.05), new CANNON.Vec3(-1.36, .29, -0.5)) //left ear
-    monkeyBody.addShape(new CANNON.Sphere(.05), new CANNON.Vec3(1.36, .29, -0.5)) //right ear
-    // monkeyBody.addShape(new CANNON.Sphere(.05), new CANNON.Vec3(0, .56, -0.85)) //head top
-    // monkeyBody.addShape(new CANNON.Sphere(.05), new CANNON.Vec3(0, .98, -0.07)) //forehead top
-    monkeyBody.addShape(new CANNON.Sphere(.05), new CANNON.Vec3(-.32, .75, 0.73)) //left eyebrow top
+    // monkeyBody.addShape(monkeyShape)
+    monkeyBody.addShape(new CANNON.Sphere(.8), new CANNON.Vec3(0, .2, 0)) // Head,
+    monkeyBody.addShape(new CANNON.Sphere(.05), new CANNON.Vec3(0, -.97, 0.46)) // Chin,
+    monkeyBody.addShape(new CANNON.Sphere(.05), new CANNON.Vec3(-1.36, .29, -0.5)) // Left ear
+    monkeyBody.addShape(new CANNON.Sphere(.05), new CANNON.Vec3(1.36, .29, -0.5)) // Right ear
+    // monkeyBody.addShape(new CANNON.Sphere(.05), new CANNON.Vec3(0, .56, -0.85)) // Head top
+    // monkeyBody.addShape(new CANNON.Sphere(.05), new CANNON.Vec3(0, .98, -0.07)) // Forehead top
+    monkeyBody.addShape(new CANNON.Sphere(.05), new CANNON.Vec3(-.32, .75, 0.73)) // Left eyebrow top
     monkeyBody.position.x = monkeyMeshClone.position.x
     monkeyBody.position.y = monkeyMeshClone.position.y
     monkeyBody.position.z = monkeyMeshClone.position.z
