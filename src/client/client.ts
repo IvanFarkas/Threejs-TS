@@ -19,7 +19,7 @@ renderer.setSize(window.innerWidth, window.innerHeight)
 document.body.appendChild(renderer.domElement)
 
 const controls = new OrbitControls(camera, renderer.domElement)
-//controls.addEventListener('change', render) // This line is unnecessary if you are re-rendering within the animation loop
+controls.addEventListener('change', render) // This line is unnecessary if you are re-rendering within the animation loop
 
 let sceneMeshes = new Array()
 
@@ -57,8 +57,7 @@ window.addEventListener('resize', () => {
 
 const raycaster = new THREE.Raycaster();
 
-renderer.domElement.addEventListener('dblclick', onDoubleClick, false);
-function onDoubleClick(event: MouseEvent) {
+renderer.domElement.addEventListener('dblclick', (event: MouseEvent) => {
   const mouse = {
     x: (event.clientX / renderer.domElement.clientWidth) * 2 - 1,
     y: -(event.clientY / renderer.domElement.clientHeight) * 2 + 1
@@ -69,25 +68,27 @@ function onDoubleClick(event: MouseEvent) {
 
   if (intersects.length > 0) {
     const p = intersects[0].point
-    //controls.target.set(p.x, p.y, p.z)
+    // controls.target.set(p.x, p.y, p.z)
 
     // new TWEEN.Tween(controls.target)
-    //     .to({
-    //         x: p.x,
-    //         y: p.y,
-    //         z: p.z
-    //     }, 500)
-    //     //.delay (1000)
-    //     .easing(TWEEN.Easing.Bounce.Out)
-    //     //.onUpdate(() => render())
-    //     .start();
+    //   .to({
+    //     x: p.x,
+    //     y: p.y,
+    //     z: p.z
+    //   }, 500)
+    //   .delay(1000)
+    //   .easing(TWEEN.Easing.Bounce.Out)
+    //   //.onUpdate(() => render()) // Performance optimization
+    //   .start();
 
     new TWEEN.Tween(sceneMeshes[1].position)
       .to({
         x: p.x,
-        //y: p.y + 1,
+        y: p.y + 1,
         z: p.z
       }, 500)
+      // .delay(1000)
+      .easing(TWEEN.Easing.Bounce.Out)
       .start()
 
     new TWEEN.Tween(sceneMeshes[1].position)
@@ -113,7 +114,8 @@ function onDoubleClick(event: MouseEvent) {
           .start()
       })
   }
-}
+}, false);
+
 
 const stats = Stats()
 document.body.appendChild(stats.dom)

@@ -20,7 +20,7 @@
   "dependencies": {
     "@tweenjs/tween.js": "^18.6.4",
     "@types/dat.gui": "^0.7.5",
-    "@types/tween.js": "^18.6.1",
+    "@types/three": "^0.127.1",
     "three": "^0.125.2",
     "typescript": "3.8.3"
   }
