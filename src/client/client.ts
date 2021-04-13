@@ -1,136 +1,266 @@
-// ConvexPolyhedrons and Compound Shapes - https://sbcode.net/threejs/compounds-versus-convex-polyhedrons/
+// ConvexObjectBreaker - https://sbcode.net/threejs/convexobjectbreaker/
 
 import * as THREE from 'three'
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls'
 import Stats from 'three/examples/jsm/libs/stats.module'
-import { GUI } from 'three/examples/jsm/libs/dat.gui.module'
 import * as CANNON from 'cannon'
-import CannonDebugRenderer from './utils/cannonDebugRenderer.js'
 import CannonUtils from 'utils/cannonUtils'
-import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader'
+import { ConvexGeometry } from 'three/examples/jsm/geometries/ConvexGeometry';
+import { ConvexObjectBreaker } from 'three/examples/jsm/misc/ConvexObjectBreaker';
+import { Reflector } from 'three/examples/jsm/objects/Reflector'
 
-const scene: THREE.Scene = new THREE.Scene()
-const axesHelper = new THREE.AxesHelper(5)
-scene.add(axesHelper)
+const scene: THREE.Scene = new THREE.Scene();
 
-var light1 = new THREE.SpotLight();
-light1.position.set(2.5, 5, 5)
-light1.angle = Math.PI / 4
-light1.penumbra = 0.5
-light1.castShadow = true;
-light1.shadow.mapSize.width = 1024;
-light1.shadow.mapSize.height = 1024;
-light1.shadow.camera.near = 0.5;
-light1.shadow.camera.far = 20
+// https://sbcode.net/extra_html/img/px.png
+const envTexture = new THREE.CubeTextureLoader().load(["img/px.png", "img/nx.png", "img/py.png", "img/ny.png", "img/pz.png", "img/nz.png"])
+envTexture.mapping = THREE.CubeReflectionMapping
+scene.environment = envTexture
+
+var walls = [
+  new THREE.MeshBasicMaterial({
+    map: new THREE.TextureLoader().load('img/px.png'),
+    side: THREE.BackSide
+  }),
+  new THREE.MeshBasicMaterial({
+    map: new THREE.TextureLoader().load('img/nx.png'),
+    side: THREE.BackSide
+  }),
+  new THREE.MeshBasicMaterial({
+    map: new THREE.TextureLoader().load('img/py.png'),
+    side: THREE.BackSide
+  }),
+  new THREE.MeshBasicMaterial({
+    map: new THREE.TextureLoader().load('img/ny.png'),
+    side: THREE.BackSide
+  }),
+  new THREE.MeshBasicMaterial({
+    map: new THREE.TextureLoader().load('img/pz.png'),
+    side: THREE.BackSide
+  }),
+  new THREE.MeshBasicMaterial({
+    map: new THREE.TextureLoader().load('img/nz.png'),
+    side: THREE.BackSide
+  })
+];
+const room = new THREE.Mesh(new THREE.BoxGeometry(200, 200, 200, 1, 1, 1), walls);
+scene.add(room);
+
+var light1 = new THREE.DirectionalLight();
+light1.position.set(20, 20, 20)
+light1.intensity = 2
 scene.add(light1);
 
-var light2 = new THREE.SpotLight();
-light2.position.set(-2.5, 5, 5)
-light2.angle = Math.PI / 4
-light2.penumbra = 0.5
-light2.castShadow = true;
-light2.shadow.mapSize.width = 1024;
-light2.shadow.mapSize.height = 1024;
-light2.shadow.camera.near = 0.5;
-light2.shadow.camera.far = 20
+var light2 = new THREE.DirectionalLight();
+light2.position.set(-20, 20, 20)
+light1.intensity = 1
 scene.add(light2);
 
 const camera: THREE.PerspectiveCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
 
-const renderer: THREE.WebGLRenderer = new THREE.WebGLRenderer()
+const renderer: THREE.WebGLRenderer = new THREE.WebGLRenderer({ antialias: true })
 renderer.setSize(window.innerWidth, window.innerHeight)
-renderer.shadowMap.enabled = true
-renderer.shadowMap.type = THREE.PCFSoftShadowMap
 document.body.appendChild(renderer.domElement)
 
-const controls = new OrbitControls(camera, renderer.domElement)
-controls.screenSpacePanning = true
+const menuPanel = document.getElementById('menuPanel') as HTMLDivElement;
+const startButton = document.getElementById('startButton') as HTMLButtonElement;
+startButton.addEventListener('click', function () {
+  controls.lock();
+}, false);
+
+const controls = new PointerLockControls(camera, renderer.domElement)
+controls.addEventListener('lock', () => menuPanel.style.display = 'none');
+controls.addEventListener('unlock', () => menuPanel.style.display = 'block');
+
+camera.position.y = 1
+camera.position.z = 2
+
+document.addEventListener('keydown', (event: KeyboardEvent) => {
+  switch (event.key) {
+    case "w":
+      controls.moveForward(.25)
+      break;
+    case "a":
+      controls.moveRight(-.25)
+      break;
+    case "s":
+      controls.moveForward(-.25)
+      break;
+    case "d":
+      controls.moveRight(.25)
+      break;
+  }
+}, false);
 
 const world = new CANNON.World()
 world.gravity.set(0, -9.82, 0)
-// world.broadphase = new CANNON.NaiveBroadphase()
-// world.solver.iterations = 10
-// world.allowSleep = true
 
-const normalMaterial: THREE.MeshNormalMaterial = new THREE.MeshNormalMaterial()
-const phongMaterial: THREE.MeshPhongMaterial = new THREE.MeshPhongMaterial()
+const material: THREE.MeshPhysicalMaterial = new THREE.MeshPhysicalMaterial({
+  clearcoat: 1.0,
+  clearcoatRoughness: 0,
+  clearcoatMap: null,
+  clearcoatRoughnessMap: null,
+  metalness: 0.5,
+  roughness: 0.0,
+  color: 'white',
+  transmission: 0.4,
+  opacity: 1,
+  transparent: true,
+  side: THREE.DoubleSide,
+})
 
-let monkeyMeshes: THREE.Object3D[] = new Array()
-let monkeyBodies: CANNON.Body[] = new Array()
-let monkeyLoaded: Boolean = false
+const meshes: { [id: string]: THREE.Mesh } = {}
+const bodies: { [id: string]: CANNON.Body } = {}
+let meshId = 0;
 
-const objLoader: OBJLoader = new OBJLoader();
-
-// Character - https://sbcode.net/extra_html/models/monkey.obj
-//objLoader.load('models/monkey.obj', (object) => {
-objLoader.load('models/monkeyPhysics.obj', (object) => {
-  //scene.add(object)
-
-  const monkeyMesh = object.children[0];
-  (monkeyMesh as THREE.Mesh).material = normalMaterial;
-  (<THREE.MeshNormalMaterial>(<THREE.Mesh>monkeyMesh).material).flatShading = true
-
-  // let monkeyMesh: THREE.Object3D
-  // let monkeyCollisionMesh: THREE.Object3D
-  // object.traverse(function (child) {
-  //   console.log(child.name)
-  //   if (child.name === "Suzanne") {
-  //     monkeyMesh = child;
-  //     (monkeyMesh as THREE.Mesh).material = normalMaterial
-  //   } else if (child.name.startsWith("physics")) {
-  //     monkeyCollisionMesh = child;
-  //   }
-  // })
-
-  for (let i = 0; i < 200; i++) {
-    const monkeyMeshClone = monkeyMesh.clone()
-    monkeyMeshClone.position.x = Math.floor(Math.random() * 10) - 5
-    monkeyMeshClone.position.z = Math.floor(Math.random() * 10) - 5
-    monkeyMeshClone.position.y = 5 + i
-    scene.add(monkeyMeshClone)
-    monkeyMeshes.push(monkeyMeshClone)
-
-    // const monkeyShape = CannonUtils.CreateTrimesh((monkeyMesh as THREE.Mesh).geometry)
-    // const monkeyShape = CannonUtils.CreateConvexPolyhedron(new THREE.IcosahedronGeometry(1))
-    // const monkeyShape = CannonUtils.CreateConvexPolyhedron((monkeyMesh as THREE.Mesh).geometry)
-    // const monkeyShape = CannonUtils.CreateConvexPolyhedron((monkeyCollisionMesh as THREE.Mesh).geometry)
-    const monkeyBody = new CANNON.Body({ mass: 1 });
-    // monkeyBody.addShape(monkeyShape)
-    monkeyBody.addShape(new CANNON.Sphere(.8), new CANNON.Vec3(0, .2, 0)) // Head,
-    monkeyBody.addShape(new CANNON.Sphere(.05), new CANNON.Vec3(0, -.97, 0.46)) // Chin,
-    monkeyBody.addShape(new CANNON.Sphere(.05), new CANNON.Vec3(-1.36, .29, -0.5)) // Left ear
-    monkeyBody.addShape(new CANNON.Sphere(.05), new CANNON.Vec3(1.36, .29, -0.5)) // Right ear
-    // monkeyBody.addShape(new CANNON.Sphere(.05), new CANNON.Vec3(0, .56, -0.85)) // Head top
-    // monkeyBody.addShape(new CANNON.Sphere(.05), new CANNON.Vec3(0, .98, -0.07)) // Forehead top
-    monkeyBody.addShape(new CANNON.Sphere(.05), new CANNON.Vec3(-.32, .75, 0.73)) // Left eyebrow top
-    monkeyBody.position.x = monkeyMeshClone.position.x
-    monkeyBody.position.y = monkeyMeshClone.position.y
-    monkeyBody.position.z = monkeyMeshClone.position.z
-    world.addBody(monkeyBody)
-    monkeyBodies.push(monkeyBody)
-  }
-
-  monkeyLoaded = true
-}, (xhr) => {
-  console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-}, (error) => {
-  console.log('An error happened');
+const groundMirror = new Reflector(new THREE.PlaneBufferGeometry(500, 500), {
+  color: new THREE.Color(0x222222),
+  clipBias: 0.003,
+  textureWidth: window.innerWidth * window.devicePixelRatio,
+  textureHeight: window.innerHeight * window.devicePixelRatio
 });
+groundMirror.position.y = -.05
+groundMirror.rotateX(- Math.PI / 2);
+scene.add(groundMirror);
 
-const planeGeometry: THREE.PlaneGeometry = new THREE.PlaneGeometry(25, 25)
-const planeMesh: THREE.Mesh = new THREE.Mesh(planeGeometry, phongMaterial)
-planeMesh.rotateX(-Math.PI / 2)
-planeMesh.receiveShadow = true;
-scene.add(planeMesh)
 const planeShape = new CANNON.Plane()
 const planeBody = new CANNON.Body({ mass: 0 })
 planeBody.addShape(planeShape)
 planeBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2)
 world.addBody(planeBody)
 
-camera.position.y = 4
-camera.position.z = 4
-controls.target.y = 2
+const convexObjectBreaker = new ConvexObjectBreaker();
+
+for (let i = 0; i < 20; i++) {
+  const size = { x: (Math.random() * 4) + 2, y: (Math.random() * 10) + 5, z: (Math.random() * 4) + 2 }
+  const geo: THREE.BoxBufferGeometry = new THREE.BoxBufferGeometry(size.x, size.y, size.z)
+  const cube = new THREE.Mesh(geo, material)
+
+  cube.position.x = (Math.random() * 50) - 25
+  cube.position.y = (size.y / 2) + .1
+  cube.position.z = (Math.random() * 50) - 25
+
+  scene.add(cube)
+  meshes[meshId] = cube
+  convexObjectBreaker.prepareBreakableObject(meshes[meshId], 1, new THREE.Vector3(), new THREE.Vector3(), true)
+
+  const cubeShape = new CANNON.Box(new CANNON.Vec3(size.x / 2, size.y / 2, size.z / 2));
+  const cubeBody = new CANNON.Body({ mass: 1 });
+  (cubeBody as any).userData = { splitCount: 0, id: meshId }
+  cubeBody.addShape(cubeShape);
+  cubeBody.position.x = cube.position.x
+  cubeBody.position.y = cube.position.y
+  cubeBody.position.z = cube.position.z
+
+  world.addBody(cubeBody);
+  bodies[meshId] = cubeBody
+
+  meshId++
+}
+
+const bullets: { [id: string]: THREE.Mesh } = {}
+const bulletBodies: { [id: string]: CANNON.Body } = {}
+let bulletId = 0
+
+const bulletMaterial = new THREE.MeshPhysicalMaterial({
+  map: new THREE.TextureLoader().load("img/marble.png"),
+  clearcoat: 1.0,
+  clearcoatRoughness: 0,
+  clearcoatMap: null,
+  clearcoatRoughnessMap: null,
+  metalness: 0.4,
+  roughness: 0.3,
+  color: 'white',
+})
+document.addEventListener('click', onClick, false);
+function onClick(e: Event) {
+  if (controls.isLocked) {
+    const bullet = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 16), bulletMaterial)
+    bullet.position.copy(camera.position)
+    scene.add(bullet)
+    bullets[bulletId] = bullet
+
+    const bulletShape = new CANNON.Sphere(1);
+    const bulletBody = new CANNON.Body({ mass: 1 });
+    bulletBody.addShape(bulletShape);
+    bulletBody.position.x = camera.position.x;
+    bulletBody.position.y = camera.position.y;
+    bulletBody.position.z = camera.position.z;
+
+    world.addBody(bulletBody);
+    bulletBodies[bulletId] = bulletBody
+
+    bulletBody.addEventListener("collide", (e: CANNON.ICollisionEvent) => {
+      if ((e.body as any).userData) {
+        if ((e.body as any).userData.splitCount < 2) {
+          splitObject((e.body as any).userData, e.contact)
+        }
+      }
+    })
+    const v = new THREE.Vector3(0, 0, -1);
+    v.applyQuaternion(camera.quaternion);
+    v.multiplyScalar(50)
+    bulletBody.velocity.set(v.x, v.y, v.z)
+    bulletBody.angularVelocity.set((Math.random() * 10) + 1, (Math.random() * 10) + 1, (Math.random() * 10) + 1)
+
+    bulletId++
+
+    //remove old bullets
+    while (Object.keys(bullets).length > 5) {
+      scene.remove(bullets[bulletId - 6])
+      delete bullets[bulletId - 6]
+      world.remove(bulletBodies[bulletId - 6])
+      delete bulletBodies[bulletId - 6]
+    }
+  }
+};
+
+function splitObject(userData: any, contact: CANNON.ContactEquation) {
+  const contactId = userData.id
+  if (meshes[contactId]) {
+    const poi = bodies[contactId].pointToLocalFrame((contact.bj.position as CANNON.Vec3).vadd(contact.rj))
+    const n = new THREE.Vector3(contact.ni.x, contact.ni.y, contact.ni.z).negate()
+    const shards = convexObjectBreaker.subdivideByImpact(meshes[contactId], new THREE.Vector3(poi.x, poi.y, poi.z), n, 1, 0);
+
+    scene.remove(meshes[contactId])
+    delete meshes[contactId]
+    world.remove(bodies[contactId])
+    delete bodies[contactId]
+
+    shards.forEach((d: THREE.Object3D) => {
+      const nextId = meshId++
+
+      scene.add(d)
+      meshes[nextId] = d as THREE.Mesh
+
+      (d as THREE.Mesh).geometry.scale(.99, .99, .99)
+      const shape = gemoetryToShape((d as THREE.Mesh).geometry)
+
+      const body = new CANNON.Body({ mass: 1 });
+      body.addShape(shape);
+      (body as any).userData = { splitCount: userData.splitCount + 1, id: nextId }
+      body.position.x = d.position.x
+      body.position.y = d.position.y
+      body.position.z = d.position.z
+      body.quaternion.x = d.quaternion.x
+      body.quaternion.y = d.quaternion.y
+      body.quaternion.z = d.quaternion.z
+      body.quaternion.w = d.quaternion.w
+      world.addBody(body)
+      bodies[nextId] = body
+    })
+  }
+}
+
+function gemoetryToShape(geometry: THREE.BufferGeometry) {
+  const position = geometry.attributes.position.array;
+  const points = [];
+  for (let i = 0; i < position.length; i += 3) {
+    points.push(new THREE.Vector3(position[i], position[i + 1], position[i + 2]));
+  }
+  const convexHull = new ConvexGeometry(points);
+  const shape = CannonUtils.CreateTrimesh(convexHull);
+  return shape;
+}
 
 window.addEventListener('resize', onWindowResize, false)
 function onWindowResize() {
@@ -143,34 +273,24 @@ function onWindowResize() {
 const stats = Stats()
 document.body.appendChild(stats.dom)
 
-const gui = new GUI()
-const physicsFolder = gui.addFolder("Physics")
-physicsFolder.add(world.gravity, "x", -10.0, 10.0, 0.1)
-physicsFolder.add(world.gravity, "y", -10.0, 10.0, 0.1)
-physicsFolder.add(world.gravity, "z", -10.0, 10.0, 0.1)
-physicsFolder.open()
-
 const clock: THREE.Clock = new THREE.Clock()
-
-const cannonDebugRenderer = new CannonDebugRenderer(scene, world)
 
 var animate = function () {
   requestAnimationFrame(animate)
 
-  controls.update()
-
   let delta = clock.getDelta()
-  if (delta > .1) delta = .1
+  if (delta > .1) delta = .1;
   world.step(delta)
-  cannonDebugRenderer.update()
 
-  // Copy coordinates from Cannon.js to Three.js
-  if (monkeyLoaded) {
-    monkeyMeshes.forEach((m, i) => {
-      m.position.set(monkeyBodies[i].position.x, monkeyBodies[i].position.y, monkeyBodies[i].position.z);
-      m.quaternion.set(monkeyBodies[i].quaternion.x, monkeyBodies[i].quaternion.y, monkeyBodies[i].quaternion.z, monkeyBodies[i].quaternion.w);
-    })
-  }
+  Object.keys(meshes).forEach((m) => {
+    meshes[m].position.set(bodies[m].position.x, bodies[m].position.y, bodies[m].position.z);
+    meshes[m].quaternion.set(bodies[m].quaternion.x, bodies[m].quaternion.y, bodies[m].quaternion.z, bodies[m].quaternion.w);
+  })
+
+  Object.keys(bullets).forEach((b) => {
+    bullets[b].position.set(bulletBodies[b].position.x, bulletBodies[b].position.y, bulletBodies[b].position.z);
+    bullets[b].quaternion.set(bulletBodies[b].quaternion.x, bulletBodies[b].quaternion.y, bulletBodies[b].quaternion.z, bulletBodies[b].quaternion.w);
+  })
 
   render()
 
