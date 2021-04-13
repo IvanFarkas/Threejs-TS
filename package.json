@@ -22,7 +22,6 @@
     "@types/dat.gui": "^0.7.5",
     "@types/three": "^0.127.1",
     "cannon": "^0.6.2",
-    "three": "^0.125.2",
     "typescript": "3.8.3"
   }
 }

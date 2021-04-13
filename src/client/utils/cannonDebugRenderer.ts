@@ -9,7 +9,7 @@
 
 import * as THREE from 'three'
 
-export default class CannonDebugRenderer {
+class CannonDebugRenderer {
   public scene: THREE.Scene
   public world: CANNON.World
   private _meshes: THREE.Mesh[] | THREE.Points[]
@@ -273,3 +273,5 @@ export default class CannonDebugRenderer {
     }
   }
 }
+
+export default CannonDebugRenderer;
