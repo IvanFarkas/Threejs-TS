@@ -1,11 +1,9 @@
-// Physics with Cannon.js - https://sbcode.net/threejs/physics-cannonjs/
-
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader'
 import Stats from 'three/examples/jsm/libs/stats.module'
 import { GUI } from 'three/examples/jsm/libs/dat.gui.module'
-import * as CANNON from 'cannon'
-import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader'
+import '/cannon/cannon.min'
 import CannonDebugRenderer from './utils/cannonDebugRenderer.js'
 
 const scene: THREE.Scene = new THREE.Scene()
@@ -47,7 +45,7 @@ controls.screenSpacePanning = true
 
 const world = new CANNON.World()
 world.gravity.set(0, -9.82, 0)
-//world.broadphase = new CANNON.NaiveBroadphase() //
+world.broadphase = new CANNON.NaiveBroadphase() //
 //world.solver.iterations = 10
 //world.allowSleep = true
 
@@ -130,36 +128,31 @@ let monkeyMesh: THREE.Object3D
 let monkeyBody: CANNON.Body
 let monkeyLoaded: Boolean = false
 const objLoader: OBJLoader = new OBJLoader();
-objLoader.load(
-  'models/monkey.obj',
-  (object) => {
-    scene.add(object)
-    monkeyMesh = object.children[0];
-    (monkeyMesh as THREE.Mesh).material = normalMaterial
-    monkeyMesh.position.x = 0
-    monkeyMesh.position.y = 20
-    //const monkeyShape = CreateTrimesh((monkeyMesh as THREE.Mesh).geometry)
-    monkeyBody = new CANNON.Body({ mass: 1 });
-    //monkeyBody.addShape(monkeyShape)
-    //monkeyBody.addShape(cubeShape)
-    // monkeyBody.addShape(sphereShape)
-    // monkeyBody.addShape(cylinderShape)
-    monkeyBody.addShape(icosahedronShape)
-    // monkeyBody.addShape(new CANNON.Plane())
-    // monkeyBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), Math.PI / 2)
-    monkeyBody.position.x = monkeyMesh.position.x
-    monkeyBody.position.y = monkeyMesh.position.y
-    monkeyBody.position.z = monkeyMesh.position.z
-    world.addBody(monkeyBody)
-    monkeyLoaded = true
-  },
-  (xhr) => {
-    console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-  },
-  (error) => {
-    console.log('An error happened');
-  }
-);
+objLoader.load('models/monkey.obj', (object) => {
+  scene.add(object)
+  monkeyMesh = object.children[0];
+  (monkeyMesh as THREE.Mesh).material = normalMaterial
+  monkeyMesh.position.x = 0
+  monkeyMesh.position.y = 20
+  //const monkeyShape = CreateTrimesh((monkeyMesh as THREE.Mesh).geometry)
+  monkeyBody = new CANNON.Body({ mass: 1 });
+  //monkeyBody.addShape(monkeyShape)
+  //monkeyBody.addShape(cubeShape)
+  // monkeyBody.addShape(sphereShape)
+  // monkeyBody.addShape(cylinderShape)
+  monkeyBody.addShape(icosahedronShape)
+  // monkeyBody.addShape(new CANNON.Plane())
+  // monkeyBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), Math.PI / 2)
+  monkeyBody.position.x = monkeyMesh.position.x
+  monkeyBody.position.y = monkeyMesh.position.y
+  monkeyBody.position.z = monkeyMesh.position.z
+  world.addBody(monkeyBody)
+  monkeyLoaded = true
+}, (xhr) => {
+  console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+}, (error) => {
+  console.log('An error happened');
+});
 
 const planeGeometry: THREE.PlaneGeometry = new THREE.PlaneGeometry(25, 25)
 const planeMesh: THREE.Mesh = new THREE.Mesh(planeGeometry, phongMaterial)
@@ -198,13 +191,12 @@ camera.position.y = 4
 camera.position.z = 4
 controls.target.y = 2
 
-window.addEventListener('resize', onWindowResize, false)
-function onWindowResize() {
+window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight
   camera.updateProjectionMatrix()
   renderer.setSize(window.innerWidth, window.innerHeight)
   render()
-}
+}, false)
 
 const stats = Stats()
 document.body.appendChild(stats.dom)
@@ -218,9 +210,9 @@ physicsFolder.open()
 
 const clock: THREE.Clock = new THREE.Clock()
 
-const cannonDebugRenderer = new CannonDebugRenderer(scene, world)
+//const cannonDebugRenderer = new CannonDebugRenderer(scene, world)
 
-var animate = function () {
+var animate = () => {
   requestAnimationFrame(animate)
 
   controls.update()
@@ -228,7 +220,7 @@ var animate = function () {
   let delta = clock.getDelta()
   if (delta > .1) delta = .1
   world.step(delta)
-  cannonDebugRenderer.update()
+  //cannonDebugRenderer.update()
 
   // Copy coordinates from Cannon.js to Three.js
   cubeMesh.position.set(cubeBody.position.x, cubeBody.position.y, cubeBody.position.z);
@@ -254,4 +246,5 @@ var animate = function () {
 function render() {
   renderer.render(scene, camera)
 }
+
 animate();
