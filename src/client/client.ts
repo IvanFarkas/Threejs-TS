@@ -1,3 +1,5 @@
+// Custom Mipmaps - https://sbcode.net/threejs/custom-mipmaps/
+
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import Stats from 'three/examples/jsm/libs/stats.module'
@@ -79,13 +81,12 @@ scene2.add(plane2)
 
 camera.position.z = 1
 
-window.addEventListener('resize', onWindowResize, false)
-function onWindowResize() {
+window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight
   camera.updateProjectionMatrix()
   renderer.setSize(window.innerWidth, window.innerHeight)
   render()
-}
+}, false)
 
 var options = {
   minFilters: {
@@ -116,13 +117,10 @@ function updateMagFilter() {
   texture2.needsUpdate = true
 }
 
-
-
-
 const stats = Stats()
 document.body.appendChild(stats.dom)
 
-var animate = function () {
+var animate = () => {
   requestAnimationFrame(animate)
 
   render()
