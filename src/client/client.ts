@@ -1,3 +1,5 @@
+// DragControls - https://sbcode.net/threejs/drag-controls/
+
 import * as THREE from 'three'
 import { DragControls } from 'three/examples/jsm/controls/DragControls'
 import Stats from 'three/examples/jsm/libs/stats.module'
@@ -38,27 +40,26 @@ cubes[2].position.x = 2
 cubes.forEach(c => scene.add(c))
 
 const controls = new DragControls(cubes, camera, renderer.domElement)
-controls.addEventListener('dragstart', function (event) {
+controls.addEventListener('dragstart', (event) => {
   event.object.material.opacity = 0.33
 })
-controls.addEventListener('dragend', function (event) {
+controls.addEventListener('dragend', (event) => {
   event.object.material.opacity = 1
 })
 
 camera.position.z = 3
 
-window.addEventListener('resize', onWindowResize, false)
-function onWindowResize() {
+window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight
   camera.updateProjectionMatrix()
   renderer.setSize(window.innerWidth, window.innerHeight)
   render()
-}
+}, false)
 
 const stats = Stats()
 document.body.appendChild(stats.dom)
 
-var animate = function () {
+var animate = () => {
   requestAnimationFrame(animate)
 
   cubes[0].rotation.x += 0.010;
