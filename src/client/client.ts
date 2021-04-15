@@ -1,3 +1,5 @@
+// MeshMatcapMaterial - https://sbcode.net/threejs/meshmatcapmaterial/
+
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import Stats from 'three/examples/jsm/libs/stats.module'
@@ -44,7 +46,6 @@ const matcapTexture = new THREE.TextureLoader().load("img/matcap-crystal.png")
 //const matcapTexture = new THREE.TextureLoader().load("img/matcap-green-yellow-pink.png")
 material.matcap = matcapTexture
 
-
 const cube: THREE.Mesh = new THREE.Mesh(boxGeometry, material)
 cube.position.x = 5
 scene.add(cube)
@@ -67,13 +68,12 @@ scene.add(torusKnot)
 
 camera.position.z = 3
 
-window.addEventListener('resize', onWindowResize, false)
-function onWindowResize() {
+window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight
   camera.updateProjectionMatrix()
   renderer.setSize(window.innerWidth, window.innerHeight)
   render()
-}
+}, false)
 
 const stats = Stats()
 document.body.appendChild(stats.dom)
@@ -101,7 +101,6 @@ var data = {
   color: material.color.getHex()
 };
 
-
 var meshMatcapMaterialFolder = gui.addFolder('THREE.MeshMatcapMaterial');
 meshMatcapMaterialFolder.addColor(data, 'color').onChange(() => { material.color.setHex(Number(data.color.toString().replace('#', '0x'))) });
 meshMatcapMaterialFolder.add(material, 'flatShading').onChange(() => updateMaterial())
@@ -112,7 +111,7 @@ function updateMaterial() {
   material.needsUpdate = true
 }
 
-var animate = function () {
+var animate = () => {
   requestAnimationFrame(animate)
 
   render()
@@ -123,4 +122,5 @@ var animate = function () {
 function render() {
   renderer.render(scene, camera)
 }
+
 animate();
