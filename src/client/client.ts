@@ -1,3 +1,5 @@
+// STL Model Loader - https://sbcode.net/threejs/loaders-stl/
+
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader'
@@ -39,19 +41,14 @@ const material = new THREE.MeshPhysicalMaterial({
 });
 
 const loader = new STLLoader()
-loader.load(
-  'models/example.stl',
-  function (geometry) {
-    const mesh = new THREE.Mesh(geometry, material)
-    scene.add(mesh)
-  },
-  (xhr) => {
-    console.log((xhr.loaded / xhr.total * 100) + '% loaded')
-  },
-  (error) => {
-    console.log(error);
-  }
-);
+loader.load('models/example.stl', (geometry) => {
+  const mesh = new THREE.Mesh(geometry, material)
+  scene.add(mesh)
+}, (xhr) => {
+  console.log((xhr.loaded / xhr.total * 100) + '% loaded')
+}, (error) => {
+  console.log(error);
+});
 
 window.addEventListener('resize', onWindowResize, false)
 function onWindowResize() {
