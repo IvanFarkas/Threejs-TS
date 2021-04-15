@@ -73,11 +73,9 @@ fbxLoader.load('models/vanguard_t_choonyung.fbx', (object) => {
         modelReady = true
       }, (xhr) => {
         console.log((xhr.loaded / xhr.total * 100) + '% loaded')
-      },
-        (error) => {
-          console.log(error);
-        }
-      )
+      }, (error) => {
+        console.log(error);
+      })
     }, (xhr) => {
       console.log((xhr.loaded / xhr.total * 100) + '% loaded')
     }, (error) => {
@@ -85,24 +83,21 @@ fbxLoader.load('models/vanguard_t_choonyung.fbx', (object) => {
     })
   }, (xhr) => {
     console.log((xhr.loaded / xhr.total * 100) + '% loaded')
-  },
-    (error) => {
-      console.log(error);
-    })
-}, (xhr) => {
-  console.log((xhr.loaded / xhr.total * 100) + '% loaded')
-},
-  (error) => {
+  }, (error) => {
     console.log(error);
   })
+}, (xhr) => {
+  console.log((xhr.loaded / xhr.total * 100) + '% loaded')
+}, (error) => {
+  console.log(error);
+})
 
-window.addEventListener('resize', onWindowResize, false)
-function onWindowResize() {
+window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight
   camera.updateProjectionMatrix()
   renderer.setSize(window.innerWidth, window.innerHeight)
   render()
-}
+}, false)
 
 const stats = Stats()
 document.body.appendChild(stats.dom)
@@ -140,7 +135,7 @@ animationsFolder.open()
 
 const clock: THREE.Clock = new THREE.Clock()
 
-var animate = function () {
+var animate = () => {
   requestAnimationFrame(animate)
 
   controls.update()
@@ -156,4 +151,5 @@ var animate = function () {
 function render() {
   renderer.render(scene, camera)
 }
+
 animate();
