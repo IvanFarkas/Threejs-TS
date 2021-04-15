@@ -1,3 +1,5 @@
+// LOD (Level Of Detail) - https://sbcode.net/threejs/lod/
+
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import Stats from 'three/examples/jsm/libs/stats.module'
@@ -73,82 +75,69 @@ treesTypes.forEach((treeType) => {
   let treeLowDetail = new THREE.Object3D()
 
   const glTFLoader = new GLTFLoader();
-  glTFLoader.load(
-    'models/' + treeType + '_high.glb',
-    (gltf) => {
+  glTFLoader.load('models/' + treeType + '_high.glb', (gltf) => {
+    for (let j = 0; j < childObjectCount; j++) {
+      const geometry = (gltf.scene.children[0].children[j] as THREE.Mesh).geometry
+      treeHighDetail.add(new THREE.Mesh(geometry, (gltf.scene.children[0].children[j] as THREE.Mesh).material))
+    }
+    treeHighDetail.traverse(function (child) {
+      if ((<THREE.Mesh>child).isMesh) {
+        child.castShadow = true;
+      }
+    })
+
+    glTFLoader.load('models/' + treeType + '_medium.glb', (gltf) => {
       for (let j = 0; j < childObjectCount; j++) {
         const geometry = (gltf.scene.children[0].children[j] as THREE.Mesh).geometry
-        treeHighDetail.add(new THREE.Mesh(geometry, (gltf.scene.children[0].children[j] as THREE.Mesh).material))
+        treeMediumDetail.add(new THREE.Mesh(geometry, (gltf.scene.children[0].children[j] as THREE.Mesh).material))
       }
-      treeHighDetail.traverse(function (child) {
+      treeMediumDetail.traverse(function (child) {
         if ((<THREE.Mesh>child).isMesh) {
           child.castShadow = true;
         }
       })
 
-      glTFLoader.load(
-        'models/' + treeType + '_medium.glb',
-        (gltf) => {
-          for (let j = 0; j < childObjectCount; j++) {
-            const geometry = (gltf.scene.children[0].children[j] as THREE.Mesh).geometry
-            treeMediumDetail.add(new THREE.Mesh(geometry, (gltf.scene.children[0].children[j] as THREE.Mesh).material))
-          }
-          treeMediumDetail.traverse(function (child) {
-            if ((<THREE.Mesh>child).isMesh) {
-              child.castShadow = true;
-            }
-          })
-
-          glTFLoader.load(
-            'models/' + treeType + '_low.glb',
-            (gltf) => {
-
-              for (let j = 0; j < childObjectCount; j++) {
-                const geometry = (gltf.scene.children[0].children[j] as THREE.Mesh).geometry
-                treeLowDetail.add(new THREE.Mesh(geometry, (gltf.scene.children[0].children[j] as THREE.Mesh).material))
-              }
-              treeLowDetail.traverse(function (child) {
-                if ((<THREE.Mesh>child).isMesh) {
-                  child.castShadow = true;
-                }
-              })
-
-              for (let i = 0; i < treeCount / treesTypes.length; i++) {
-                const lod = new THREE.LOD()
-                let mesh = treeHighDetail.clone()
-                mesh.scale.copy(scales[treeCounter])
-                lod.addLevel(mesh, 5)
-
-                mesh = treeMediumDetail.clone()
-                mesh.scale.copy(scales[treeCounter])
-                lod.addLevel(mesh, 10)
-
-                mesh = treeLowDetail.clone()
-                mesh.scale.copy(scales[treeCounter])
-                lod.addLevel(mesh, 30)
-
-                lod.position.copy(positions[treeCounter])
-                scene.add(lod);
-
-                treeCounter++
-              }
-            }
-          )
+      glTFLoader.load('models/' + treeType + '_low.glb', (gltf) => {
+        for (let j = 0; j < childObjectCount; j++) {
+          const geometry = (gltf.scene.children[0].children[j] as THREE.Mesh).geometry
+          treeLowDetail.add(new THREE.Mesh(geometry, (gltf.scene.children[0].children[j] as THREE.Mesh).material))
         }
-      )
-    }
-  )
+        treeLowDetail.traverse(function (child) {
+          if ((<THREE.Mesh>child).isMesh) {
+            child.castShadow = true;
+          }
+        })
+
+        for (let i = 0; i < treeCount / treesTypes.length; i++) {
+          const lod = new THREE.LOD()
+          let mesh = treeHighDetail.clone()
+          mesh.scale.copy(scales[treeCounter])
+          lod.addLevel(mesh, 5)
+
+          mesh = treeMediumDetail.clone()
+          mesh.scale.copy(scales[treeCounter])
+          lod.addLevel(mesh, 10)
+
+          mesh = treeLowDetail.clone()
+          mesh.scale.copy(scales[treeCounter])
+          lod.addLevel(mesh, 30)
+
+          lod.position.copy(positions[treeCounter])
+          scene.add(lod);
+
+          treeCounter++
+        }
+      })
+    })
+  })
 })
 
-
-
-window.addEventListener('resize', onWindowResize, false)
-function onWindowResize() {
+window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight
   camera.updateProjectionMatrix()
   renderer.setSize(window.innerWidth, window.innerHeight)
   render()
-}
+}, false)
 
 renderer.domElement.addEventListener('dblclick', onDoubleClick, false);
 function onDoubleClick(event: MouseEvent) {
