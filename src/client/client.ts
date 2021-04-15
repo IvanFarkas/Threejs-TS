@@ -1,3 +1,5 @@
+// MeshToonMaterial - https://sbcode.net/threejs/meshtoonmaterial/
+
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import Stats from 'three/examples/jsm/libs/stats.module'
@@ -62,13 +64,12 @@ scene.add(torusKnot)
 
 camera.position.z = 5
 
-window.addEventListener('resize', onWindowResize, false)
-function onWindowResize() {
+window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight
   camera.updateProjectionMatrix()
   renderer.setSize(window.innerWidth, window.innerHeight)
   render()
-}
+}, false)
 
 const stats = Stats()
 document.body.appendChild(stats.dom)
@@ -121,7 +122,7 @@ function updateMaterial() {
   material.needsUpdate = true
 }
 
-var animate = function () {
+var animate = () => {
   requestAnimationFrame(animate)
 
   icosahedron.rotation.y += .005
@@ -143,4 +144,5 @@ var animate = function () {
 function render() {
   renderer.render(scene, camera)
 }
+
 animate();
