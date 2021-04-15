@@ -1,3 +1,5 @@
+// Transform Controls - https://sbcode.net/threejs/transform-controls/
+
 import * as THREE from 'three'
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls'
 import Stats from 'three/examples/jsm/libs/stats.module'
@@ -12,7 +14,7 @@ const renderer: THREE.WebGLRenderer = new THREE.WebGLRenderer()
 renderer.setSize(window.innerWidth, window.innerHeight)
 document.body.appendChild(renderer.domElement)
 
-renderer.domElement.ondragstart = function (event) { event.preventDefault(); return false; }
+renderer.domElement.ondragstart = (event) => { event.preventDefault(); return false; }
 
 const geometry: THREE.BoxGeometry = new THREE.BoxGeometry()
 const material: THREE.MeshNormalMaterial = new THREE.MeshNormalMaterial()
@@ -24,7 +26,7 @@ const controls = new TransformControls(camera, renderer.domElement)
 controls.attach(cube);
 scene.add(controls);
 
-window.addEventListener('keydown', function (event) {
+window.addEventListener('keydown', (event) => {
   switch (event.key) {
     case "g":
       controls.setMode("translate")
@@ -40,13 +42,12 @@ window.addEventListener('keydown', function (event) {
 
 camera.position.z = 2
 
-window.addEventListener('resize', onWindowResize, false)
-function onWindowResize() {
+window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight
   camera.updateProjectionMatrix()
   renderer.setSize(window.innerWidth, window.innerHeight)
   render()
-}
+}, false)
 
 const stats = Stats()
 document.body.appendChild(stats.dom)
