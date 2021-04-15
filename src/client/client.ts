@@ -113,20 +113,19 @@ dropzone.ondrop = function (evt: DragEvent) {
   reader.readAsArrayBuffer(files[0]);
 };
 
-window.addEventListener('resize', onWindowResize, false)
-function onWindowResize() {
+window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight
   camera.updateProjectionMatrix()
   renderer.setSize(window.innerWidth, window.innerHeight)
   render()
-}
+}, false)
 
 const stats = Stats()
 document.body.appendChild(stats.dom)
 
 const clock: THREE.Clock = new THREE.Clock()
 
-var animate = function () {
+var animate = () => {
   requestAnimationFrame(animate)
 
   controls.update()
@@ -141,4 +140,5 @@ var animate = function () {
 function render() {
   renderer.render(scene, camera)
 }
+
 animate();
