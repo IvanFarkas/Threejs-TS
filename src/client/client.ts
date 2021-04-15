@@ -1,3 +1,5 @@
+// MeshPhysicalMaterial - https://sbcode.net/threejs/meshphysicalmaterial/
+
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import Stats from 'three/examples/jsm/libs/stats.module'
@@ -59,13 +61,12 @@ scene.add(torusKnot)
 
 camera.position.z = 3
 
-window.addEventListener('resize', onWindowResize, false)
-function onWindowResize() {
+window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight
   camera.updateProjectionMatrix()
   renderer.setSize(window.innerWidth, window.innerHeight)
   render()
-}
+}, false)
 
 const stats = Stats()
 document.body.appendChild(stats.dom)
@@ -121,8 +122,8 @@ function updateMaterial() {
 var animate = function () {
   requestAnimationFrame(animate)
 
-  torusKnot.rotation.x+=.01
-  torusKnot.rotation.y+=.01
+  torusKnot.rotation.x += .01
+  torusKnot.rotation.y += .01
   render()
 
   stats.update()
@@ -131,4 +132,5 @@ var animate = function () {
 function render() {
   renderer.render(scene, camera)
 }
+
 animate();
