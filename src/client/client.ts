@@ -1,3 +1,5 @@
+// DragControls with GLTF Animations - https://sbcode.net/threejs/gltf-animations-drag/
+
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
@@ -114,7 +116,7 @@ document.body.appendChild(stats.dom)
 
 const clock: THREE.Clock = new THREE.Clock()
 
-var animate = function () {
+var animate = () => {
   requestAnimationFrame(animate)
 
   orbitControls.update()
@@ -133,4 +135,5 @@ var animate = function () {
 function render() {
   renderer.render(scene, camera)
 }
+
 animate();
