@@ -1,3 +1,5 @@
+// Ambient Light - https://sbcode.net/threejs/ambient-light/
+
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import Stats from 'three/examples/jsm/libs/stats.module'
@@ -69,13 +71,12 @@ scene.add(torus[4])
 
 camera.position.z = 7
 
-window.addEventListener('resize', onWindowResize, false)
-function onWindowResize() {
+window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight
   camera.updateProjectionMatrix()
   renderer.setSize(window.innerWidth, window.innerHeight)
   render()
-}
+}, false)
 
 const stats = Stats()
 document.body.appendChild(stats.dom)
@@ -104,7 +105,7 @@ meshesFolder.add(data, 'mapsEnabled').onChange(() => {
   })
 });
 
-var animate = function () {
+var animate = () => {
   requestAnimationFrame(animate)
 
   torus.forEach(t => {
