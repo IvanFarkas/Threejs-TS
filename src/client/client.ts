@@ -262,20 +262,19 @@ function gemoetryToShape(geometry: THREE.BufferGeometry) {
   return shape;
 }
 
-window.addEventListener('resize', onWindowResize, false)
-function onWindowResize() {
+window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight
   camera.updateProjectionMatrix()
   renderer.setSize(window.innerWidth, window.innerHeight)
   render()
-}
+}, false)
 
 const stats = Stats()
 document.body.appendChild(stats.dom)
 
 const clock: THREE.Clock = new THREE.Clock()
 
-var animate = function () {
+var animate = () => {
   requestAnimationFrame(animate)
 
   let delta = clock.getDelta()
@@ -300,4 +299,5 @@ var animate = function () {
 function render() {
   renderer.render(scene, camera)
 }
+
 animate();
