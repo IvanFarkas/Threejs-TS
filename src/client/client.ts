@@ -1,3 +1,5 @@
+// MTL Loader - https://sbcode.net/threejs/loaders-mtl/
+
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader'
@@ -22,68 +24,49 @@ document.body.appendChild(renderer.domElement)
 const controls = new OrbitControls(camera, renderer.domElement)
 
 const mtlLoader = new MTLLoader();
-mtlLoader.load('models/monkey.mtl',
-  (materials) => {
-    materials.preload();
+mtlLoader.load('models/monkey.mtl', (materials) => {
+  materials.preload();
 
-    const objLoader: OBJLoader = new OBJLoader();
-    objLoader.setMaterials(materials);
-    objLoader.load(
-      'models/monkey.obj',
-      (object) => {
-        scene.add(object);
-      },
-      (xhr) => {
-        console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-      },
-      (error) => {
-        console.log('An error happened');
-      }
-    );
-  },
-  (xhr) => {
+  const objLoader: OBJLoader = new OBJLoader();
+  objLoader.setMaterials(materials);
+  objLoader.load('models/monkey.obj', (object) => {
+    scene.add(object);
+  }, (xhr) => {
     console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-  },
-  (error) => {
+  }, (error) => {
     console.log('An error happened');
-  }
-)
+  });
+}, (xhr) => {
+  console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+}, (error) => {
+  console.log('An error happened');
+})
 
-mtlLoader.load('models/monkeyTextured.mtl',
-  (materials) => {
-    materials.preload();
+mtlLoader.load('models/monkeyTextured.mtl', (materials) => {
+  materials.preload();
 
-    const objLoader: OBJLoader = new OBJLoader();
-    objLoader.setMaterials(materials);
-    objLoader.load(
-      'models/monkeyTextured.obj',
-      (object) => {
-        object.position.x = 3
-        scene.add(object);
-      },
-      (xhr) => {
-        console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-      },
-      (error) => {
-        console.log('An error happened');
-      }
-    );
-  },
-  (xhr) => {
+  const objLoader: OBJLoader = new OBJLoader();
+  objLoader.setMaterials(materials);
+  objLoader.load('models/monkeyTextured.obj', (object) => {
+    object.position.x = 3
+    scene.add(object);
+  }, (xhr) => {
     console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-  },
-  (error) => {
+  }, (error) => {
     console.log('An error happened');
-  }
-)
+  });
+}, (xhr) => {
+  console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+}, (error) => {
+  console.log('An error happened');
+})
 
-window.addEventListener('resize', onWindowResize, false)
-function onWindowResize() {
+window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight
   camera.updateProjectionMatrix()
   renderer.setSize(window.innerWidth, window.innerHeight)
   render()
-}
+}, false)
 
 const stats = Stats()
 document.body.appendChild(stats.dom)
