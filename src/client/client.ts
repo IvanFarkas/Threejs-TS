@@ -1,3 +1,5 @@
+// Material Repeat and Center - https://sbcode.net/threejs/texture-offset-repeat-center/
+
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import Stats from 'three/examples/jsm/libs/stats.module'
@@ -25,7 +27,6 @@ const planeGeometry2: THREE.PlaneGeometry = new THREE.PlaneGeometry()
 
 const texture1 = new THREE.TextureLoader().load("img/grid.png")
 const texture2 = new THREE.TextureLoader().load("img/grid.png")
-
 
 const material1: THREE.MeshBasicMaterial = new THREE.MeshBasicMaterial({ map: texture1 })
 const material2: THREE.MeshBasicMaterial = new THREE.MeshBasicMaterial({ map: texture2 })
@@ -81,7 +82,7 @@ function updateMagFilter() {
 const stats = Stats()
 document.body.appendChild(stats.dom)
 
-var animate = function () {
+var animate = () => {
   requestAnimationFrame(animate)
 
   render()
@@ -90,7 +91,6 @@ var animate = function () {
 };
 
 function render() {
-
   renderer.setScissorTest(true);
 
   renderer.setScissor(0, 0, window.innerWidth / 2 - 2, window.innerHeight);
@@ -100,6 +100,6 @@ function render() {
   renderer.render(scene2, camera);
 
   renderer.setScissorTest(false);
-
 }
+
 animate();
