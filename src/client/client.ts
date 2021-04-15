@@ -1,3 +1,5 @@
+// DisplacementMap - https://sbcode.net/threejs/displacmentmap/
+
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import Stats from 'three/examples/jsm/libs/stats.module'
@@ -45,13 +47,12 @@ scene.add(plane)
 
 camera.position.z = 3
 
-window.addEventListener('resize', onWindowResize, false)
-function onWindowResize() {
+window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight
   camera.updateProjectionMatrix()
   renderer.setSize(window.innerWidth, window.innerHeight)
   render()
-}
+}, false)
 
 const stats = Stats()
 document.body.appendChild(stats.dom)
@@ -116,13 +117,12 @@ function regeneratePlaneGeometry() {
   plane.geometry = newGeometry
 }
 
-
 function updateMaterial() {
   material.side = Number(material.side)
   material.needsUpdate = true
 }
 
-var animate = function () {
+var animate = () => {
   requestAnimationFrame(animate)
 
   render()
@@ -133,4 +133,5 @@ var animate = function () {
 function render() {
   renderer.render(scene, camera)
 }
+
 animate();
