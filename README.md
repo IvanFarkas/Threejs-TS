@@ -56,6 +56,12 @@ You should see a rotating green wireframe cube, and be able to rotate it further
 code .
 ```
 
+## Models
+Most of the models can be found at https://sbcode.net/extra_html/models/[file name] like https://sbcode.net/extra_html/models/saplingTree.glb
+
+## Images
+Most of the images can be found at https://sbcode.net/extra_html/img/[file name] like https://sbcode.net/extra_html/img/grid.png
+
 ## Branches
 
 The default **master** branch does not include **Stats.js**, **Dat.GUI**, **Socket.IO** or many of the other libraries demonstrated throughout the course.
