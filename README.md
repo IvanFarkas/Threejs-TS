@@ -21,12 +21,12 @@ The client typescript and compiled javascript both use [ES6 import syntax](https
 1. Clone Repository
 
 ```bash
-git clone https://github.com/Sean-Bradley/Three.js-TypeScript-Boilerplate.git
+git clone https://github.com/IvanFarkas/Threejs-TS.git
 ```
 
 2. CD into folder
 ```bash
-cd Three.js-TypeScript-Boilerplate
+cd Threejs-TS
 ```
 
 3. Install TypeScript
@@ -47,7 +47,7 @@ npm install
 npm run dev
 ```
 
-6. Visit [http://127.0.0.1:3000/](http://127.0.0.1:3000/)
+6. Visit [http://localhost:3000/](http://localhost:3000/) or [http://localhost:8080/](http://localhost:8080/) if Webpack
 
 You should see a rotating green wireframe cube, and be able to rotate it further with your mouse.
 
@@ -71,7 +71,7 @@ npm install
 npm run dev
 ```
 
-Visit http://127.0.0.1:3000
+Visit http://localhost:3000
 
 ![With Stats.js](docs/with-stats.jpg)
 
@@ -85,7 +85,7 @@ npm install
 npm run dev
 ```
 
-Visit http://127.0.0.1:3000
+Visit http://localhost:3000
 
 ![With Stats.js and Dat.GUI](docs/with-stats-gui.jpg)
 
@@ -100,7 +100,7 @@ npm install
 npm run dev
 ```
 
-Visit http://127.0.0.1:3000
+Visit http://localhost:3000
 
 ![With SocketIO](docs/with-socketio.jpg)
 
@@ -117,7 +117,7 @@ npm install
 npm run dev
 ```
 
-Visit http://127.0.0.1:3000
+Visit http://localhost:3000
 
 ![With Cannon.js](docs/with-cannonjs.jpg)
 
@@ -132,7 +132,7 @@ npm install
 npm run dev
 ```
 
-Visit http://127.0.0.1:3000
+Visit http://localhost:3000
 
 ![With Webcam as Texture](docs/with-webcam.jpg)
 
@@ -148,7 +148,7 @@ npm install
 npm run dev
 ```
 
-Visit http://127.0.0.1:3000
+Visit http://localhost:3000
 
 ![With BSC5 Bright Star Catalog](docs/with-bsc5.jpg)
 
@@ -166,7 +166,7 @@ npm install
 npm run dev
 ```
 
-Visit http://127.0.0.1:3000
+Visit http://localhost:3000
 
 ![The Ball Game](docs/theballgame.jpg)
 
@@ -180,7 +180,7 @@ npm install
 npm run dev
 ```
 
-Visit http://127.0.0.1:3000
+Visit http://localhost:3000
 
 ![With Annotations](docs/annotations.jpg)
 
@@ -196,7 +196,7 @@ npm install
 npm run dev
 ```
 
-Visit http://127.0.0.1:3000
+Visit http://localhost:3000
 
 ![With CSG](docs/with-csg.jpg)
 
@@ -212,7 +212,7 @@ npm install
 npm run dev
 ```
 
-Visit http://127.0.0.1:3000
+Visit http://localhost:3000
 
 ![With WebXR](docs/with-webxr.jpg)
 
@@ -228,7 +228,7 @@ npm install
 npm run dev
 ```
 
-Visit http://127.0.0.1:8080
+Visit http://localhost:8080
 
 ![With Stats.js and Dat.GUI](docs/with-stats-gui.jpg)
 
