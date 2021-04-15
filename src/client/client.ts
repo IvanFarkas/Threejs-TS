@@ -1,3 +1,5 @@
+// Raycaster Measurements - https://sbcode.net/threejs/measurements/
+
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
@@ -38,7 +40,6 @@ const pickableObjects: THREE.Mesh[] = new Array()
 
 const loader = new GLTFLoader()
 
-// TODO: Get model
 loader.load('models/simplescene.glb', (gltf) => {
   gltf.scene.traverse(function (child) {
     if ((<THREE.Mesh>child).isMesh) {
@@ -69,7 +70,6 @@ window.addEventListener('resize', () => {
   labelRenderer.setSize(window.innerWidth, window.innerHeight)
   render()
 }, false)
-
 
 let ctrlDown = false
 let lineId = 0
@@ -175,7 +175,7 @@ function onDocumentMouseMove(event: MouseEvent) {
 const stats = Stats()
 document.body.appendChild(stats.dom)
 
-var animate = function () {
+var animate = () => {
   requestAnimationFrame(animate)
 
   controls.update()
@@ -189,4 +189,5 @@ function render() {
   labelRenderer.render(scene, camera)
   renderer.render(scene, camera)
 }
+
 animate();
