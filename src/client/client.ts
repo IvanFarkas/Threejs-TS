@@ -1,3 +1,5 @@
+// PointerLockControls - https://sbcode.net/threejs/pointerlock-controls/
+
 import * as THREE from 'three'
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls'
 import Stats from 'three/examples/jsm/libs/stats.module'
