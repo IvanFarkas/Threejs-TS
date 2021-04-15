@@ -1,3 +1,5 @@
+// FBX Model Loader - https://sbcode.net/threejs/loaders-fbx/
+
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader'
