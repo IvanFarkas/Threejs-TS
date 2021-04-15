@@ -102,7 +102,7 @@ window.addEventListener('resize', () => {
 const stats = Stats()
 document.body.appendChild(stats.dom)
 
-var animate = function () {
+var animate = () => {
   requestAnimationFrame(animate)
 
   controls.update()
@@ -115,4 +115,5 @@ var animate = function () {
 function render() {
   renderer.render(scene, camera)
 }
+
 animate();
