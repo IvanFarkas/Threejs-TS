@@ -17,5 +17,5 @@
       "../typings"
     ]
   },
-  "include": ["**/*.ts"]
+  "include": ["**/*.ts", "utils/ConstructiveSolidGeometry.js"]
 }

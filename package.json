@@ -4,7 +4,7 @@
   "description": "",
   "scripts": {
     "build": "webpack --config ./src/client/webpack.prod.js",
-    "dev": "webpack serve --config ./src/client/webpack.dev.js",
+    "dev": "webpack serve --config ./src/client/webpack.dev.js --port 3005",
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node ./dist/server/server.js"
   },
@@ -22,6 +22,7 @@
     "@types/dat.gui": "^0.7.5",
     "@types/three": "^0.127.1",
     "cannon": "^0.6.2",
+    "three": "^0.127.0",
     "typescript": "3.8.3"
   }
 }
