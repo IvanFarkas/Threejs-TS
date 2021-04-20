@@ -1,10 +1,10 @@
 import * as THREE from 'three'
+import * as CANNON from 'cannon'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader'
 import Stats from 'three/examples/jsm/libs/stats.module'
 import { GUI } from 'three/examples/jsm/libs/dat.gui.module'
-import '/cannon/cannon.min'
-import CannonDebugRenderer from './utils/cannonDebugRenderer.js'
+import CannonDebugRenderer from './utils/cannonDebugRenderer'
 
 const scene: THREE.Scene = new THREE.Scene()
 const axesHelper = new THREE.AxesHelper(5)
@@ -210,7 +210,7 @@ physicsFolder.open()
 
 const clock: THREE.Clock = new THREE.Clock()
 
-//const cannonDebugRenderer = new CannonDebugRenderer(scene, world)
+const cannonDebugRenderer = new CannonDebugRenderer(scene, world)
 
 var animate = () => {
   requestAnimationFrame(animate)
@@ -220,7 +220,7 @@ var animate = () => {
   let delta = clock.getDelta()
   if (delta > .1) delta = .1
   world.step(delta)
-  //cannonDebugRenderer.update()
+  cannonDebugRenderer.update()
 
   // Copy coordinates from Cannon.js to Three.js
   cubeMesh.position.set(cubeBody.position.x, cubeBody.position.y, cubeBody.position.z);

@@ -8,6 +8,7 @@
 // - Highlight faces that the CONVEXPOLYHEDRON thinks are pointing into the shape. 
 
 import * as THREE from 'three'
+import * as CANNON from 'cannon'
 
 export default class CannonDebugRenderer {
   public scene: THREE.Scene
