@@ -4,7 +4,7 @@ import * as THREE from 'three'
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls'
 import Stats from 'three/examples/jsm/libs/stats.module'
 import * as CANNON from 'cannon'
-import CannonUtils from 'utils/cannonUtils'
+import CannonUtils from './utils/cannonUtils'
 import { ConvexGeometry } from 'three/examples/jsm/geometries/ConvexGeometry';
 import { ConvexObjectBreaker } from 'three/examples/jsm/misc/ConvexObjectBreaker';
 import { Reflector } from 'three/examples/jsm/objects/Reflector'
