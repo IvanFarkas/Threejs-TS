@@ -43,6 +43,12 @@ const renderer: THREE.WebGLRenderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
+const menuPanel = document.getElementById('menuPanel') as HTMLDivElement;
+const startButton = document.getElementById('startButton') as HTMLButtonElement;
+startButton.addEventListener('click', function () {
+  menuPanel.style.display = 'none';
+}, false);
+
 const controls = new OrbitControls(camera, renderer.domElement);
 
 const material = new THREE.MeshPhongMaterial({
